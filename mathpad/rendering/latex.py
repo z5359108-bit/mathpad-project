@@ -8,10 +8,10 @@ from ..solvers.base import Step
 
 
 def to_latex(content) -> str:
-    """sympy nesnesi veya metni LaTeX biçimine çevir."""
+    """sympy nesnesi veya metni LaTeX biçimine çevir (logaritma: \\ln)."""
     match content:
         case sp.Basic() as expr:
-            return sp.latex(expr)
+            return sp.latex(expr, ln_notation=True)
         case sp.MatrixBase() as mat:
             return sp.latex(mat)
         case str() as raw:
@@ -19,7 +19,7 @@ def to_latex(content) -> str:
         case None:
             return ""
         case _:
-            return sp.latex(content)
+            return sp.latex(content, ln_notation=True)
 
 
 def step_to_latex(step: Step) -> str:

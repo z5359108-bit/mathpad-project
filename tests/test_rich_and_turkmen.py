@@ -80,6 +80,35 @@ class TestRichSteps(unittest.TestCase):
         self.assertEqual(sol.result, 3)
 
 
+class TestDefiniteNotebookSteps(unittest.TestCase):
+    def setUp(self):
+        self.engine = MathPad()
+
+    def test_dx_over_expr_notation(self):
+        sol = self.engine.ask("integral of dx/(5x+1) from 0 to 1")
+        self.assertEqual(sp.simplify(sp.sympify(sol.result) - sp.log(6) / 5), 0)
+        titles = [step.title for step in sol.steps]
+        self.assertTrue(any("Değişken değiştirme" in t for t in titles))
+        self.assertTrue(any("Alt sınır" in t for t in titles))
+        self.assertTrue(any("Üst sınır" in t for t in titles))
+        self.assertTrue(any("sadeleştir" in t for t in titles))
+
+    def test_fraction_upper_bound(self):
+        sol = self.engine.ask("integral of dx/(x^2+1) from 0 to pi/4")
+        self.assertEqual(sp.simplify(sp.sympify(sol.result) - sp.atan(sp.pi / 4)), 0)
+
+    def test_fraction_lower_bound(self):
+        sol = self.engine.ask("integral of dx/(3*x+2) from 0 to 2/3")
+        result = sp.simplify(sp.sympify(sol.result))
+        self.assertEqual(sp.simplify(result - sp.log(2) / 3), 0)
+
+    def test_bounds_not_regressed(self):
+        self.assertEqual(self.engine.ask("integral of x^2 from 0 to 3").result, 9)
+        self.assertEqual(
+            self.engine.ask("sin(x) fonksiyonunun 0 dan pi ye integrali").result, 2
+        )
+
+
 class TestTurkmen(unittest.TestCase):
     def setUp(self):
         self.engine = MathPad()

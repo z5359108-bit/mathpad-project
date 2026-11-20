@@ -14,7 +14,7 @@ from .solvers.base import Step
 
 
 def _L(expr) -> str:
-    return sp.latex(expr)
+    return sp.latex(expr, ln_notation=True)
 
 
 _FUNC_CLASSES = (sp.sin, sp.cos, sp.tan, sp.exp, sp.log)

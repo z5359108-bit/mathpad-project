@@ -17,10 +17,12 @@ _KW_STRONG = ("türev", "derivative", "integral", "limit", "sınır", "taylor",
 _KW_WEAK = ("fonksiyon", "function", "eğri", "yaklaş", "approach", "dx", "açılım", "cek")
 
 _ORDER_WORDS = {"ikinci": 2, "second": 2, "üçüncü": 3, "third": 3, "dördüncü": 4, "fourth": 4}
+_BOUND = r"([\w.]+(?:\s*/\s*[\w.]+)?)"
 _DEF_TR = re.compile(
-    r"([\w.]+)\s*'?\s*(?:dan|den|tan|ten)\s+([\w.]+)\s*'?\s*(?:ya|ye|a|e)\b"
+    rf"{_BOUND}\s*'?\s*(?:dan|den|tan|ten)\s+{_BOUND}\s*'?\s*(?:ya|ye|a|e)\b"
 )
-_DEF_EN = re.compile(r"\bfrom\s*([\w.]+)\s*(?:to|up\s*to)\s*([\w.]+)")
+_DEF_EN = re.compile(rf"\bfrom\s*{_BOUND}\s*(?:to|up\s*to)\s*{_BOUND}")
+_DEF_SYM = re.compile(r"∫\s*_?\s*\{?\s*([^{}\s,]+)\s*\}?\s*\^\s*\{?\s*([^{}\s,]+)\s*\}?")
 _LIMIT = re.compile(r"(\w+)\s*(?:->|→|yaklaşırken|yaklaşınca|approaches|approaching|goes\s*to)\s*(-?[\w.∞]+)")
 _NOISE = frozenset({
     "türev", "türevi", "türevini", "derivative", "integral", "integrali", "integralini",
@@ -58,7 +60,7 @@ def _bounds(question: str) -> tuple[sp.Basic, sp.Basic, str] | None:
     def to_bound(raw: str) -> sp.Basic | None:
         return sp.Rational(raw) if is_number(raw) else try_sympify(raw)
 
-    for pattern in (_DEF_EN, _DEF_TR):
+    for pattern in (_DEF_SYM, _DEF_EN, _DEF_TR):
         match = pattern.search(question)
         if match:
             lower = sp.Rational(match.group(1)) if is_number(match.group(1)) else try_sympify(match.group(1))
@@ -174,6 +176,8 @@ class CalculusSolver(Solver):
         q = question
         if bounds:
             q = q.replace(bounds[2], " ")
+        q = re.sub(r"∫", " ", q)
+        q = re.sub(r"\bdx\s*/", "1/", q)
         q = re.sub(r"\b(?:from|up\s*to|to)\b", " ", q, flags=re.IGNORECASE)
         candidate = extract_expression(q, extra_noise=_NOISE)
         expr = try_sympify(candidate)
@@ -188,10 +192,28 @@ class CalculusSolver(Solver):
             result = sp.integrate(expr, (var, lower, upper))
             steps.insert(1, Step("Belirli integral aralığı",
                                  latex=f"\\int_{{{to_latex(lower)}}}^{{{to_latex(upper)}}}"))
+            upper_at = antiderivative.subs(var, upper)
+            lower_at = antiderivative.subs(var, lower)
             steps.append(Step(
                 "Kalkülüsün ana teoremi: sınırları yerine koy",
-                latex=f"\\left[{to_latex(antiderivative)}\\right]_{{{to_latex(lower)}}}^{{{to_latex(upper)}}} = {to_latex(antiderivative.subs(var, upper))} - {to_latex(antiderivative.subs(var, lower))}",
+                latex=f"\\left[{to_latex(antiderivative)}\\right]_{{{to_latex(lower)}}}^{{{to_latex(upper)}}} = {to_latex(upper_at)} - {to_latex(lower_at)}",
             ))
+            steps.append(Step(
+                f"Üst sınır: F({to_latex(upper)})",
+                latex=f"F({to_latex(upper)}) = {to_latex(upper_at)}",
+            ))
+            lower_detail = "ln(1) = 0 olduğu için bu terim sadeleşir" if lower == 0 else None
+            steps.append(Step(
+                f"Alt sınır: F({to_latex(lower)})",
+                latex=f"F({to_latex(lower)}) = {to_latex(lower_at)}",
+                detail=lower_detail,
+            ))
+            if lower_at == 0:
+                steps.append(Step(
+                    "Topla ve sadeleştir",
+                    latex=f"{to_latex(upper_at)} - {to_latex(lower_at)} = {to_latex(result)}",
+                    detail="sıfır terimi düşer",
+                ))
         else:
             result = sp.integrate(expr, var)
         steps.append(Step("Sonuç", content=result))

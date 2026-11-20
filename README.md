@@ -23,6 +23,7 @@ Yalnızca `sympy`'ye dayanır; tüm çözücüler eklenebilir/çıkarılabilir e
   - İntegral: toplama kuralı, sabit ile çarpım, kuvvet kuralı, `u = ax + b` değişken değiştirme, integral tablosu
   - Limit: 0/0 belirsizlik analizi, ortak çarpan sadeleştirmesi, L'Hôpital kuralı, sonsuzda derece kuralı, trigonometrik limitler (`sin(t)/t → 1`)
   - Cebir: lineer denklemde terim taşıma → bölme → kök → kontrol akışı; ikinci derecede katsayılar + diskriminant formülü + kök formülü
+  - Belirli integral defter adımları (v1.3): `dx/(5x+1)` yazımı, `∫_0^1` doğrudan sınırlar, **kesirli sınırlar** (`from 0 to pi/4`, `0 dan 2/3 ye`), kalkülüsün ana teoremi akışı: F(üst) − F(alt) terim terim hesaplanır, `ln(1) = 0` gibi sadeleşmeler not edilir ve sonuç toplanır
 
 ## Yapı
 
@@ -38,7 +39,7 @@ Yalnızca `sympy`'ye dayanır; tüm çözücüler eklenebilir/çıkarılabilir e
 │       ├── base.py          # Solver arayüzü — kendi çözücünü yaz, register() ile ekle
 │       ├── arithmetic.py, algebra.py, calculus.py,
 │       ├── linear_algebra.py, number_theory.py, statistics.py
-├── tests/                   # 92 birim testi
+├── tests/                   # 119 birim testi
 ├── examples/                # demo çıktıları (defter.md, defter.html, defter.txt)
 ├── demo.py                  # 47 soruluk vitrin + otomatik doğrulama
 └── requirements.txt

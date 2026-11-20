@@ -138,7 +138,7 @@ class AlgebraSolver(Solver):
             ))
             steps.append(Step(
                 "Diskriminant formülü",
-                latex=f"\\Delta = b^2 - 4ac = {to_latex(b)}^2 - 4 \\cdot {to_latex(a)} \\cdot {to_latex(c)} = {to_latex(delta)}",
+                latex=f"\\Delta = b^2 - 4ac = \\left({to_latex(b)}\\right)^2 - 4 \\cdot {to_latex(a)} \\cdot {to_latex(c)} = {to_latex(delta)}",
             ))
             if delta > 0:
                 note = "\\Delta > 0 \\Rightarrow \\text{iki farklı gerçek kök}"
