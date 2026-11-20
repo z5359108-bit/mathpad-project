@@ -139,7 +139,7 @@ class TestTurkmen(unittest.TestCase):
         from mathpad.utils import fold_turkmen
 
         self.assertEqual(fold_turkmen("deňlemäni"), "denlemani")
-        self.assertEqual(fold_turkmen("hosylaýyş"), "hosylayyş")
+        self.assertEqual(fold_turkmen("hosylaýyş"), "hosylayys")
 
 
 if __name__ == "__main__":

@@ -11,8 +11,8 @@ from ..rendering.text import to_text
 from ..utils import normalize, try_sympify
 from .base import Solution, Solver, Step
 
-_PERCENT_AFTER = re.compile(r"(\d+(?:\.\d+)?)\s*(?:%|yüzde)", re.IGNORECASE)
-_PERCENT_BEFORE = re.compile(r"yüzde\s*(\d+(?:\.\d+)?)", re.IGNORECASE)
+_PERCENT_AFTER = re.compile(r"(\d+(?:\.\d+)?)\s*(?:%|yuzde)", re.IGNORECASE)
+_PERCENT_BEFORE = re.compile(r"yuzde\s*(\d+(?:\.\d+)?)", re.IGNORECASE)
 _PERCENT_PREFIX = re.compile(r"%\s*(\d+(?:\.\d+)?)")
 _FACTORIAL = re.compile(r"(?<![\w.])(\d+)\s*!")
 

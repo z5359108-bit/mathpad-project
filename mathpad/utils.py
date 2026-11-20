@@ -29,6 +29,9 @@ _SUPERSCRIPTS = {"⁰": "0", "¹": "1", "²": "2", "³": "3", "⁴": "4", "⁵":
 _TURKMEN_FOLD = str.maketrans({
     "ä": "a", "Ä": "a", "ň": "n", "Ň": "n", "ý": "y", "Ý": "y",
     "ž": "z", "Ž": "z",
+    "ü": "u", "Ü": "u", "ö": "o", "Ö": "o", "ş": "s", "Ş": "S",
+    "ç": "c", "Ç": "C", "ı": "i", "į": "i", "İ": "i",
+    "ğ": "g", "Ğ": "G",
 })
 
 
@@ -88,7 +91,7 @@ def try_sympify(text: str, locals_: dict | None = None) -> sp.Basic | None:
         local.update(locals_)
     try:
         result = sp.sympify(cleaned, locals=local, evaluate=True)
-    except (sp.SympifyError, SyntaxError, TypeError, ValueError):
+    except (sp.SympifyError, SyntaxError, TypeError, ValueError, AttributeError):
         return None
     if isinstance(result, (sp.Tuple, tuple, list)):
         return None

@@ -32,7 +32,8 @@ def _linear_in(expr, var) -> bool:
     if not expr.has(var):
         return True
     try:
-        return expr.as_poly(var).degree() <= 1
+        poly = expr.as_poly(var)
+        return poly is not None and poly.degree() <= 1
     except sp.PolynomialError:
         return False
 
@@ -49,9 +50,36 @@ _DIFF_TABLE_RULES = {
 
 
 def derivative_steps(expr, var, max_depth: int = 3) -> list[Step]:
-    steps = _walk_derivative(expr, var, 0, max_depth)
+    steps: list[Step] = []
+    quotient = _quotient_setup(expr, var)
+    if quotient is not None:
+        steps.extend(quotient)
+    else:
+        steps.extend(_walk_derivative(expr, var, 0, max_depth))
     if not steps:
         steps = [Step("Sonuç", content=sp.diff(expr, var))]
+    return steps
+
+
+def _quotient_setup(expr, var) -> list[Step] | None:
+    """f/g biçimindeki ifadelerde bölüm kuralı adımları üretir."""
+    if not expr.has(var):
+        return None
+    num, den = sp.fraction(sp.together(expr))
+    if den == 1 or not den.has(var):
+        return None
+    if sp.degree(sp.expand(den), var) == 0:
+        return None
+    steps = [Step(
+        "Bölüm (oran) kuralı",
+        latex=r"\left(\frac{u}{v}\right)' = \frac{u'v - uv'}{v^{2}}",
+        detail=f"u = {sp.latex(num, ln_notation=True)}, \\; v = {sp.latex(sp.expand(den), ln_notation=True)}",
+    )]
+    try:
+        if sp.degree(sp.expand(num), var) > 0:
+            steps.extend(_walk_derivative(num, var, 1, 3))
+    except sp.PolynomialError:
+        pass
     return steps
 
 
@@ -187,8 +215,28 @@ def _walk_integral(expr, var, depth: int, out: list[Step]) -> None:
                 "Sabit ile çarpım kuralı",
                 latex=r"\int c \cdot f \, dx = c \int f \, dx",
             ))
+        u_sub = _exp_u_sub(rest, var)
+        if u_sub is not None:
+            inner, inner_slope = u_sub
+            out.append(Step(
+                "Değişken değiştirme",
+                latex=rf"u = {_L(inner)}, \quad du = {_L(inner_slope)} \, d{var.name}",
+            ))
+            out.append(Step("Bu terimin integrali", content=sp.integrate(expr, var)))
+            return
+        if _by_parts(out, rest, var):
+            return
         if rest.has(var):
             _walk_integral(rest, var, depth + 1, out)
+        return
+
+    if isinstance(expr, sp.Pow) and isinstance(expr.base, (sp.sin, sp.cos)) and expr.exp == 2:
+        out.append(Step(
+            "Yarı açı özdeşliği",
+            latex=rf"{_L(expr)} = \frac{{1 - {_L(sp.cos(2 * var))}}}{{2}}",
+            detail=r"sin^2 ve cos^2 kalıpları yarı açı formülüyle açılır",
+        ))
+        out.append(Step("Bu terimin integrali", content=sp.integrate(expr, var)))
         return
 
     for check, rule in _INT_TABLE_RULES:
@@ -225,6 +273,92 @@ def _walk_integral(expr, var, depth: int, out: list[Step]) -> None:
     out.append(Step("Genel integral", content=sp.integrate(expr, var)))
 
 
+# ------------------------------------------------------------ kısmi integrasyon
+
+def _classify_integral_factor(factor, var):
+    """Faktörü (poly, transandant, other) sınıfına ayırır."""
+    if _linear_in(factor, var):
+        return "poly"
+    if isinstance(factor, (sp.log, sp.exp, sp.sin, sp.cos)):
+        return "trans"
+    return "other"
+
+
+def _by_parts(out: list[Step], expr, var) -> bool:
+    """x·lnx, x·cosx, x·e^x, ln x kalıpları için kısmi integrasyon adımları."""
+    if isinstance(expr, sp.log) and expr.args[0] == var:
+        u, dv_expr = expr, sp.Integer(1)
+        v = var
+        du = 1 / var
+        remaining = sp.integrate(v * du, var)
+        out.append(Step(
+            "Kısmi integrasyon",
+            latex=r"\int u \, dv = uv - \int v \, du",
+            detail="u = ln x, dv = dx",
+        ))
+        out.append(Step("v ve du", latex=r"v = x, \quad du = \frac{1}{x} \, dx"))
+        out.append(Step("v·du'nun integrali",
+                        latex=rf"\int x \cdot \frac{{1}}{{x}} \, dx = \int dx = {var}"))
+        out.append(Step("Birleştir", content=sp.integrate(expr, var)))
+        return True
+    if not isinstance(expr, sp.Mul):
+        return False
+    factors = [f for f in sp.Mul.make_args(expr) if f.has(var)]
+    if len(factors) != 2:
+        return False
+    classes = [_classify_integral_factor(f, var) for f in factors]
+    if sorted(classes) != ["poly", "trans"]:
+        return False
+    poly_f = factors[classes.index("poly")]
+    trans_f = factors[classes.index("trans")]
+    if isinstance(trans_f, (sp.sin, sp.cos, sp.exp)) and not _linear_in(trans_f.args[0], var):
+        return False
+    if poly_f.is_number or (isinstance(poly_f, sp.Pow) and poly_f.exp < 0):
+        return False
+    if isinstance(trans_f, sp.log):
+        u, dv_expr = trans_f, poly_f
+    else:
+        u, dv_expr = poly_f, trans_f
+    du = sp.diff(u, var)
+    v = sp.integrate(dv_expr, var)
+    remaining_integrand = sp.simplify(v * du)
+    v_head = sp.latex(v, ln_notation=True)
+    u_head = sp.latex(u, ln_notation=True)
+    dv_head = sp.latex(dv_expr, ln_notation=True)
+    du_head = sp.latex(du, ln_notation=True)
+    out.append(Step(
+        "Kısmi integrasyon",
+        latex=r"\int u \, dv = uv - \int v \, du",
+        detail=f"u = {_L(u)}, dv = {_L(dv_expr)} dx seçildi",
+    ))
+    out.append(Step("u, dv seçimi ve v, du",
+                    latex=rf"u = {u_head}, \quad dv = {dv_head} \, d{var.name} \Rightarrow v = {v_head}, \quad du = {du_head} \, d{var.name}"))
+    result = sp.integrate(expr, var)
+    out.append(Step("v·du'nun integrali",
+                    latex=rf"\int {sp.latex(remaining_integrand, ln_notation=True)} \, d{var.name} = {sp.latex(sp.integrate(remaining_integrand, var), ln_notation=True)}"))
+    out.append(Step("Birleştir", content=result))
+    return True
+
+
+def _exp_u_sub(expr, var):
+    """x·e^(a·x² + ...) kalıbı için (inner, slope) döndürür."""
+    if not isinstance(expr, sp.Mul):
+        return None
+    factors = [f for f in sp.Mul.make_args(expr) if f.has(var)]
+    if len(factors) != 2:
+        return None
+    exps = [f for f in factors if isinstance(f, sp.exp) and not _linear_in(f.args[0], var)]
+    polys = [f for f in factors if _linear_in(f, var) and not f.is_number]
+    if len(exps) != 1 or len(polys) != 1:
+        return None
+    inner = exps[0].args[0]
+    outer = polys[0]
+    slope = sp.diff(inner, var)
+    if sp.simplify(outer / slope) != 1 and sp.degree(sp.Poly(outer, var) if outer.is_polynomial(var) else outer, var) not in (0, 1):
+        return None
+    return inner, slope
+
+
 # ---------------------------------------------------------------- limit
 
 def limit_steps(expr, var, value) -> list[Step]:
@@ -243,6 +377,9 @@ def limit_steps(expr, var, value) -> list[Step]:
             latex=rf"x \to {_L(value)} \Rightarrow \frac{{{_L(num)}}}{{{_L(den)}}} = \frac{{0}}{{0}}",
             detail="doğrudan yerine koyma yetmez",
         ))
+        standard = _standard_exp_limit(num, den, var, value)
+        if standard:
+            return steps + standard
         simplified = _cancel_common_factor(expr, var)
         if simplified is not None:
             steps.append(Step(
@@ -332,6 +469,44 @@ def _degree_comparison(num, den, var):
         return (int(n_num), int(n_den), lead)
     except (sp.PolynomialError, AttributeError, TypeError):
         return None
+
+
+def _standard_exp_limit(num, den, var, value) -> list[Step] | None:
+    """(e^{a·t} - 1)/(m·t) → a/m kalıbı için standart limit adımı."""
+    if value != 0 or not isinstance(num, sp.Add):
+        return None
+    iexps = [t for t in num.free_symbols]  # noqa: F841 - yer tutucu
+    exp_terms = [t for t in num.as_ordered_terms() if isinstance(t, sp.exp) and _linear_in(t.args[0], var)]
+    if len(exp_terms) != 1:
+        return None
+    exp_term = exp_terms[0]
+    others = [t for t in num.as_ordered_terms() if t != exp_term]
+    if len(others) != 1 or not others[0].is_number:
+        return None
+    try:
+        if sp.simplify(exp_term + others[0]) != num:
+            return None
+        if exp_term.subs(var, value) + others[0].subs(var, value) != 0:
+            return None
+        result = sp.limit(num / den, var, value, "+-")
+    except Exception:  # noqa: BLE001
+        return None
+    inner = exp_term.args[0]
+    k = sp.diff(inner, var)
+    den_coeff = sp.diff(den, var) if den.is_polynomial(var) and sp.degree(den, var) == 1 else None
+    if den_coeff is None:
+        return None
+    return [
+        Step(
+            "Önemli standart limit",
+            latex=r"\lim_{t \to 0} \frac{e^{t} - 1}{t} = 1",
+            detail=f"t = {_L(inner)}",
+        ),
+        Step(
+            "Katsayıları düzenle",
+            latex=rf"\lim_{{ {var.name} \to 0 }} \frac{{ e^{{ {_L(inner)} }} - 1 }}{{ {_L(den)} }} = {_L(result)}",
+        ),
+    ]
 
 
 def _special_trig_limit(expr, var, value):

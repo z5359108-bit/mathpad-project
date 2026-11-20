@@ -8,21 +8,21 @@ import sympy as sp
 
 from ..rendering.latex import to_latex
 from ..rendering.text import to_text
-from ..utils import normalize, parse_matrix
+from ..utils import fold_turkmen, normalize, parse_matrix
 from .base import Solution, Solver, Step
 
 _KW_STRONG = ("matris", "matrix", "determinant", "det", "özdeğer", "ozdeger", "eigen",
               "özvektör", "eigenvector", "ters", "inverse", "rank", "iz", "trace",
               "transpoze", "transpose", "devrik")
-_KW_WEAK = ("lineer", "linear", "vektör", "vector", "kare", "çarp", "çarpım", "system")
+_KW_WEAK = ("lineer", "linear", "vektor", "vektör", "vector", "kare", "carp", "carpim", "system")
 _OP_PATTERNS = {
     "determinant": re.compile(r"determinant|det\b|sarrus", re.IGNORECASE),
     "inverse": re.compile(r"inverse|tersini|ters matris|tersini al", re.IGNORECASE),
-    "eigen": re.compile(r"özdeğer|ozdeger|özvektör|ozvektor|eigen|karakteristik", re.IGNORECASE),
+    "eigen": re.compile(r"ozdeger|ozvektor|eigen|karakteristik", re.IGNORECASE),
     "rank": re.compile(r"\brank\b|kerte", re.IGNORECASE),
     "trace": re.compile(r"\btrace\b|\biz\b", re.IGNORECASE),
     "transpose": re.compile(r"transpoze|transpose|devrik", re.IGNORECASE),
-    "multiply": re.compile(r"çarp|çarpım|carpim|multiply|times|\btimes\b", re.IGNORECASE),
+    "multiply": re.compile(r"carp|multiply|times|\btimes\b", re.IGNORECASE),
 }
 _MATRICES = re.compile(
     r"\[\s*\[[^\[\]]*\](?:(?:\s*,\s*|\s*;\s*)\[[^\[\]]*\])*\s*\]"
@@ -58,8 +58,9 @@ class LinearAlgebraSolver(Solver):
         return self._solution(question, result, steps, label)
 
     def _operation(self, question: str) -> str:
+        q = fold_turkmen(question).lower()
         for op_name, pattern in _OP_PATTERNS.items():
-            if pattern.search(question):
+            if pattern.search(q):
                 return op_name
         return "determinant"
 

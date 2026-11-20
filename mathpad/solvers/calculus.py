@@ -12,18 +12,19 @@ from ..steps import derivative_steps, integral_steps, limit_steps
 from ..utils import extract_expression, fold_turkmen, normalize, pick_symbol, try_sympify
 from .base import Solution, Solver, Step
 
-_KW_STRONG = ("türev", "derivative", "integral", "limit", "sınır", "taylor",
-              "seri", "maclaurin", "d/dx", "∫", "hosylay", "çak", "çek")
-_KW_WEAK = ("fonksiyon", "function", "eğri", "yaklaş", "approach", "dx", "açılım", "cek")
+_KW_STRONG = ("turev", "türev", "derivative", "integral", "limit", "sinir", "sınır", "taylor",
+              "seri", "maclaurin", "d/dx", "∫", "hosylay", "cak", "cek", "onumi", "onumi", "turev")
+_KW_WEAK = ("fonksiyon", "function", "egri", "yaklas", "approach", "dx", "acilim", "cek")
 
-_ORDER_WORDS = {"ikinci": 2, "second": 2, "üçüncü": 3, "third": 3, "dördüncü": 4, "fourth": 4}
+_ORDER_WORDS = {"ikinci": 2, "ikinji": 2, "second": 2, "onumi": 2, "önümi": 2,
+                "üçüncü": 3, "uchunji": 3, "third": 3, "dördüncü": 4, "dordunji": 4, "fourth": 4}
 _BOUND = r"([\w.]+(?:\s*/\s*[\w.]+)?)"
 _DEF_TR = re.compile(
     rf"{_BOUND}\s*'?\s*(?:dan|den|tan|ten)\s+{_BOUND}\s*'?\s*(?:ya|ye|a|e)\b"
 )
 _DEF_EN = re.compile(rf"\bfrom\s*{_BOUND}\s*(?:to|up\s*to)\s*{_BOUND}")
 _DEF_SYM = re.compile(r"∫\s*_?\s*\{?\s*([^{}\s,]+)\s*\}?\s*\^\s*\{?\s*([^{}\s,]+)\s*\}?")
-_LIMIT = re.compile(r"(\w+)\s*(?:->|→|yaklaşırken|yaklaşınca|approaches|approaching|goes\s*to)\s*(-?[\w.∞]+)")
+_LIMIT = re.compile(r"(\w+)\s*(?:->|\u2192|yaklas?i[rğ]?[en]*k?e?n?|yaklasi[rğ]?[en]*|approaches|approaching|goes\s*to)\s*(-?[\w.∞]+)")
 _NOISE = frozenset({
     "türev", "türevi", "türevini", "derivative", "integral", "integrali", "integralini",
     "al", "alınız", "hesapla", "bul", "nedir", "limit", "limiti", "limitini",
@@ -32,6 +33,8 @@ _NOISE = frozenset({
     "fonksiyonunun", "fonksiyonun", "iken", "around", "etrafında", "sıfırda",
     "order", "derece", "terim", "terimli", "terimi", "terms", "derecesi", "mertebeden",
     "birinci", "ikinci", "üçüncü", "dördüncü", "beşinci", "first", "second", "third", "fourth", "fifth",
+    "ikinji", "onumi", "önümi", "funksiyanyn", "funksiyanin", "funksiyanynyn",
+    "turev", "turevi", "turevini", "turevleri", "turevleri",
 })
 
 
@@ -40,10 +43,10 @@ def _order_of(question: str, default: int = 1) -> int:
     for word, n in _ORDER_WORDS.items():
         if word in q:
             return n
-    match = re.search(r"(\d+)\s*(?:üncü|ncü|nci|ncı|inci|ıncı)(?:\s*mertebeden)?\s*türev", q)
+    match = re.search(r"(\d+)\s*(?:unc?u|inc?i|nc[uüiı])(?:\s*mertebeden)?\s*(?:turev|türev)", q)
     if match:
         return int(match.group(1))
-    match = re.search(r"(\d+)\s*\.\s*(?:mertebeden\s*)?türev", q)
+    match = re.search(r"(\d+)\s*\.\s*(?:mertebeden\s*)?(?:turev|türev)", q)
     if match:
         return int(match.group(1))
     match = re.search(r"order\s*[:=]?\s*(\d+)", q)
@@ -51,7 +54,7 @@ def _order_of(question: str, default: int = 1) -> int:
 
 
 def _clean_order_phrases(question: str) -> str:
-    question = re.sub(r"\d+\s*\.\s*(?:mertebeden\s*)?türev", " türev ", question)
+    question = re.sub(r"\d+\s*\.\s*(?:mertebeden\s*)?(?:turev|türev)", " turev ", question)
     question = re.sub(r"\b\d+\s*mertebeden\b", " ", question)
     return question
 
@@ -124,13 +127,13 @@ class CalculusSolver(Solver):
 
     def solve(self, question: str) -> Solution:
         q = fold_turkmen(question).lower()
-        if re.search(r"türev|derivative|d/dx|hosylay", q):
+        if re.search(r"türev|turev|derivative|d/dx|hosylay|ikinji|onumi|onumi", q):
             return self._derivative(question)
         if re.search(r"integral|∫", q):
             return self._integral(question)
-        if re.search(r"limit|sınır\b|yaklaş|\bçak\b|\bçek\b|\bcek\b", q):
+        if re.search(r"limit|sınır\b|sinir\b|yaklaş|yaklas|\bçak\b|\bcak\b|\bçek\b|\bcek\b", q):
             return self._limit(question)
-        if re.search(r"taylor|maclaurin|seri|açılım", q):
+        if re.search(r"taylor|maclaurin|seri|açılım|acilim", q):
             return self._series(question)
         raise ValueError("Kalkülüs alt problemi belirlenemedi.")
 
@@ -148,6 +151,7 @@ class CalculusSolver(Solver):
     def _derivative(self, question: str) -> Solution:
         steps: list[Step] = []
         order = _order_of(question)
+        question = re.sub(r"\b(?:y|f|g)\s*\(\s*([a-z])\s*\)\s*=\s*", " ", question, flags=re.IGNORECASE)
         q = re.sub(r"d/dx", " ", question, flags=re.IGNORECASE)
         q = _clean_order_phrases(q)
         candidate = extract_expression(q, extra_noise=_NOISE)
@@ -167,10 +171,28 @@ class CalculusSolver(Solver):
             steps.append(Step("Türevi tekrar tekrar uygula",
                               detail=f"{order} kez ardışık türev alınır"))
         result = sp.diff(expr, var, order)
+        combined = result
+        if order == 1 and isinstance(expr, sp.Mul) and any(
+            isinstance(part, sp.Pow) and bool(part.exp.is_negative) for part in expr.args
+        ):
+            merged = sp.cancel(sp.together(result))
+            if merged != result:
+                steps.append(Step("Ortak paydaya getir", content=merged))
+                combined = merged
+        trig = sp.trigsimp(result)
+        if trig != result:
+            _latex = to_latex
+            steps.append(Step(
+                "Trigonometrik \u00f6zde\u015flik",
+                latex=rf"{_latex(result)} = {_latex(trig)}",
+            ))
+            combined = trig
+        result = combined
         steps.append(Step("Sonuç", content=result))
         return self._solution(question, result, steps, "Türev" if order == 1 else f"{order}. mertebeden türev")
 
     def _integral(self, question: str) -> Solution:
+        question = re.sub(r"\b(?:y|f|g)\s*\(\s*([a-z])\s*\)\s*=\s*", " ", question, flags=re.IGNORECASE)
         steps: list[Step] = []
         bounds = _bounds(question)
         q = question

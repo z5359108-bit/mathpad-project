@@ -12,15 +12,16 @@ from ..utils import fold_turkmen, normalize, try_sympify, try_sympify_lenient
 from ..steps import linear_eq_steps
 from .base import Solution, Solver, Step
 
-_KW_STRONG = ("denklem", "çöz", "coz", "solve", "equation", "kök", "çarpan", "factor",
-              "expand", "genişlet", "simplify", "basitleşt", "sadeleş", "denlem")
-_KW_WEAK = ("değişken", "bilinmeyen", "polinom", "polynomial")
+_KW_STRONG = ("denklem", "coz", "solve", "equation", "kok", "carpan", "factor",
+              "expand", "genislet", "simplify", "basitlest", "sadelest", "denlem")
+_KW_WEAK = ("degisken", "bilinmeyen", "polinom", "polynomial")
 _SPLIT = re.compile(r"[,;]|\bve\b|\band\b", flags=re.IGNORECASE)
 _EQ_NOISE = r"\b(?:solve|çöz|çözün|coz|denklemini|denklemi|denklem|sistemi|equation|equations|" \
             r"köklerini|kökleri|bul|nedir|kaçtır|root|roots|denlem\S*|denlemani)\b"
-_FX_NOISE = r"\b(?:factor\S*|çarpanlar?\S*|factorize|expand|genişlet|aç\b|" \
+_FX_NOISE = r"\b(?:factor\S*|[çc]arpanlar?\S*|factorize|expand|[gğ]enişlet|[gğ]enislet|çyzyklary|" \
             r"simplify|basitleştir\S*|basitleş\S*|sadeleş\S*|sadeleştir\S*|" \
-            r"ifadesini|ifadeyi|ifade|expression|ay[iı]r\S*)\b"
+            r"basitlestir\S*|basitlest\S*|sadelest\S*|baslashtir\S*|" \
+            r"ifadesini|ifadeyi|ifade|expression|ay[iı]r\S*|boluji|bolumu)\b"
 _SUFFIXES = ("'nin", "'nın", "'nun", "'ün", "'ın", "'in", "'yi", "'yı", "'si", "'i", "'ı")
 
 
@@ -51,12 +52,19 @@ class AlgebraSolver(Solver):
     name = "algebra"
     title = "Cebir"
 
+    _OTHER_DOMAIN = re.compile(
+        r"t\u00fcrev|turev|derivative|d/dx|integral|limit|hosylay|onumi|\u00f6n\u00fcmi"
+        r"|te[gğ]et|tangent|ekstremum|extremum|meydan|alan|area"
+    )
+
     def can_handle(self, question: str) -> float:
         q = fold_turkmen(question).lower()
+        if self._OTHER_DOMAIN.search(q):
+            return 0.0
         if "=" in q:
             if _extract_equations(question):
                 score = 0.75
-                if re.search(r"\bfactor|çarpan|expand|basitleşt|simplify", q):
+                if re.search(r"\bfactor|carpan|expand|basitlest|simplify", q):
                     score = 0.9
                 return score
             return 0.0
@@ -71,7 +79,7 @@ class AlgebraSolver(Solver):
 
 
     def _is_transform_request(self, question: str) -> bool:
-        return bool(re.search(r"\bfactor|çarpan|expand|genişlet|simplify|basitleşt|sadeleş", fold_turkmen(question).lower()))
+        return bool(re.search(r"\bfactor|carpan|expand|genislet|simplify|basitlest|sadelest", fold_turkmen(question).lower()))
 
     def _solution(self, question: str, result, steps: list[Step], title: str) -> Solution:
         return Solution(
@@ -86,17 +94,17 @@ class AlgebraSolver(Solver):
 
     def _transform(self, question: str) -> Solution:
         steps: list[Step] = []
-        q = question.lower()
+        q = fold_turkmen(question).lower()
         cleaned = re.sub(_FX_NOISE, " ", _clean(question), flags=re.IGNORECASE)
         expr = try_sympify(cleaned)
         if expr is None:
             raise ValueError("İfade ayrıştırılamadı.")
         steps.append(Step("Verilen ifade", content=expr))
-        if re.search(r"\bfactor|çarpan", q):
+        if re.search(r"\bfactor|carpan", q):
             result = sp.factor(expr)
             steps.append(Step("Çarpanlara ayırma", content=result))
             label = "Çarpanlara ayırma"
-        elif re.search(r"\bexpand|genişlet", q):
+        elif re.search(r"\bexpand|genislet", q):
             result = sp.expand(expr)
             steps.append(Step("Parantezleri açma (expand)", content=result))
             label = "İfadeyi açma"

@@ -12,10 +12,10 @@ from ..rendering.text import to_text
 from ..utils import extract_numbers, fold_turkmen, replace_decimal_comma
 from .base import Solution, Solver, Step
 
-_KW_STRONG = ("ebob", "obeb", "gcd", "ekok", "okek", "lcm", "asal", "prime", "çarpanla",
+_KW_STRONG = ("ebob", "obeb", "gcd", "ekok", "okek", "lcm", "asal", "prime", "carpanla", "çarpanla",
               "factoriz", "faktör", "mod", "kalan", "kombinasyon", "permutasyon", "permutation",
               "combination", "bölthünen", "bölünebilirlik")
-_KW_WEAK = ("sayı", "number", "tam", "bölen", "divisor")
+_KW_WEAK = ("sayi", "sayı", "number", "tam", "bolen", "bölen", "divisor")
 
 _COMB = re.compile(r"\bC\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)|(\d+)\s*[Cc]\s*(\d+)\b", re.IGNORECASE)
 _PERM = re.compile(r"\bP\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)|(\d+)\s*[Pp]\s*(\d+)\b", re.IGNORECASE)
@@ -30,7 +30,7 @@ class NumberTheorySolver(Solver):
         q = fold_turkmen(question).lower()
         if _COMB.search(q) or _PERM.search(q) or _MOD.search(q):
             return 0.9
-        if re.search(r"ebob|obeb|gcd|ekok|okek|lcm|asal|prime|kombinasyon|permutasyon|çarpanla|factoriz|bolegi|boluji", q):
+        if re.search(r"ebob|obeb|gcd|ekok|okek|lcm|asal|prime|kombinasyon|permutasyon|carpanla|factoriz|bolegi|boluji", q):
             return 0.85
         return self._score(q, strong=_KW_STRONG, weak=_KW_WEAK)
 
@@ -42,11 +42,11 @@ class NumberTheorySolver(Solver):
         if re.search(r"ekok|okek|lcm", q):
             numbers = self._ints(question, min_count=2)
             return self._lcm(numbers, question)
-        if re.search(r"asal mı|asalmi|is\s*prime|prime\?|asallık", q):
+        if re.search(r"asal m[iı]|asalmi|is\s*prime|prime\?|asallik|asallık", q):
             return self._prime(question)
-        if re.search(r"çarpanla|factoriz|asal çarpan|faktör", q):
+        if re.search(r"carpanla|factoriz|asal [cç]arpan|faktor", q):
             return self._factorization(question)
-        if re.search(r"bölen|divisor", q):
+        if re.search(r"bolen|divisor", q):
             numbers = self._ints(question, min_count=1)
             return self._divisors(numbers[0], question)
         if re.search(r"kombinasyon", q):

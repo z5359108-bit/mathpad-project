@@ -12,6 +12,8 @@ Yalnızca `sympy`'ye dayanır; tüm çözücüler eklenebilir/çıkarılabilir e
 | Cebir | denklem çözümü (tekli/sistem), ikinci derece + diskriminant analizi, çarpanlara ayırma, açma, basitleştirme |
 | Kalkülüs | türev (N. mertebe), belirsiz/belirli integral, limit (±∞ dahil), Taylor/Maclaurin serisi |
 | Lineer Cebir | determinant (Sarrus adımı), ters matris, özdeğer/özvektör, rank, iz, transpoze, matris çarpımı |
+| İleri Cebir | eşitsizlikler (işaret tablosu, rasyonel), `|2x-3|=7` mutlak değer, log/üstel denklemler (`log_2(x+3)=4`, `3^(x+1)=81`), köklü denklemler (`sqrt(x+5)=x-1` + amaçlı kontrol), arifmetik/geometrik progressiya, Vieta teoremi, özdeşlik uygulaması (`a²+b²=(a+b)²−2ab`), kalan teoremi, binom katsayısı, kompleks sayılar (`(1+2i)(3-i)`, `|3+4i|`) |
+| İleri Analiz | teğet denklemi, ekstremumlar (2. türev testi), kapalı aralıkta max/min, eğrilerle sınırlı alan, kısmi integrasyon (`∫x·cosx`, `∫lnx`), yarı açı (`∫sin²x`), u-dönüşümü (`∫x·e^(x²)`), standart limitler (`(e^x−1)/x → 1`) |
 | Sayı Teorisi | EBOB/EKOK, asallık testi, asal çarpanlar, bölenler, modüler aritmetik, kombinasyon/permutasyon |
 | İstatistik | ortalama, medyan, mod, varyans, standart sapma, toplam, min/max, adet |
 
@@ -24,6 +26,8 @@ Yalnızca `sympy`'ye dayanır; tüm çözücüler eklenebilir/çıkarılabilir e
   - Limit: 0/0 belirsizlik analizi, ortak çarpan sadeleştirmesi, L'Hôpital kuralı, sonsuzda derece kuralı, trigonometrik limitler (`sin(t)/t → 1`)
   - Cebir: lineer denklemde terim taşıma → bölme → kök → kontrol akışı; ikinci derecede katsayılar + diskriminant formülü + kök formülü
   - Belirli integral defter adımları (v1.3): `dx/(5x+1)` yazımı, `∫_0^1` doğrudan sınırlar, **kesirli sınırlar** (`from 0 to pi/4`, `0 dan 2/3 ye`), kalkülüsün ana teoremi akışı: F(üst) − F(alt) terim terim hesaplanır, `ln(1) = 0` gibi sadeleşmeler not edilir ve sonuç toplanır
+  - **Defter zincirleri (v1.4)**: cevaplar okul defterindeki gibi birbirine bağlı derivasyon olarak yazılır, ör. `D=25-16=9, x_{1,2}=(5±3)/4, x_1=2, x_2=1/2`; `x_1+x_2=6, x_1x_2=5 ⟹ x_1²+x_2²=36-10=26`; `f'(x)=2sinx·cosx = sin2x`; `S=∫_0^1(x²-x³)dx=1/3-1/4=1/12`
+  - **ASCII/Türkçe/Türkmençe serbest karışım**: `turevi`/`türevi`, `carpanlarina`/`çarpanlarına`, `ikinji onumi`/`ikinci türevi` — hepsi aynı çözücüye gider
 
 ## Yapı
 
@@ -38,8 +42,9 @@ Yalnızca `sympy`'ye dayanır; tüm çözücüler eklenebilir/çıkarılabilir e
 │   └── solvers/             # değiştirilebilir çözücüler
 │       ├── base.py          # Solver arayüzü — kendi çözücünü yaz, register() ile ekle
 │       ├── arithmetic.py, algebra.py, calculus.py,
+│       ├── advanced_algebra.py, advanced_analysis.py,
 │       ├── linear_algebra.py, number_theory.py, statistics.py
-├── tests/                   # 119 birim testi
+├── tests/                   # 160 birim testi
 ├── examples/                # demo çıktıları (defter.md, defter.html, defter.txt)
 ├── demo.py                  # 47 soruluk vitrin + otomatik doğrulama
 └── requirements.txt

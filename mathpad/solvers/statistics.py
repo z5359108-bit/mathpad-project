@@ -12,9 +12,9 @@ from .base import Solution, Solver, Step
 
 _KW_STRONG = ("ortalama", "mean", "average", "medyan", "median", "mod ", "tepe", "modu",
               "standart sapma", "std", "sapma", "varyans", "variance", "toplam", "sum",
-              "adet", "count", "eleman", "min", "maksimum", "maximum", "en küçük", "en büyük",
+              "adet", "count", "eleman", "min", "maksimum", "maximum", "en kucuk", "en buyuk",
               "jemi", "orta", "in ulu", "in kici")
-_KW_WEAK = ("liste", "list", "veri", "data", "sayı", "değer")
+_KW_WEAK = ("liste", "list", "veri", "data", "sayi", "deger")
 
 
 def _extract_list(text: str) -> list[float]:
@@ -33,6 +33,10 @@ class StatisticsSolver(Solver):
 
     def can_handle(self, question: str) -> float:
         q = fold_turkmen(question).lower()
+        if re.search(
+            r"funksi\w*|fonksi\w*|aral[iı][ğg]|aralik|interval|noktas|turev|türev|integral|ekstremum|te[gğ]et|f\s*\(", q
+        ):
+            return 0.0
         if re.search(r"\[[\d\s,.;-]+\]", q):
             return min(self._score(q, strong=_KW_STRONG, weak=_KW_WEAK) + 0.3, 1.0)
         return self._score(q, strong=_KW_STRONG, weak=_KW_WEAK)
@@ -68,10 +72,10 @@ class StatisticsSolver(Solver):
         elif re.search(r"adet|count|eleman", q):
             result = len(data)
             title = f"Eleman sayısı = {result}"
-        elif re.search(r"\bmin\b|en küçük|in kici", q):
+        elif re.search(r"\bmin\b|en kucuk|in kici", q):
             result = min(data)
             title = f"En küçük = {self._fmt(result)}"
-        elif re.search(r"\bmaks?\b|maksimum|maximum|en büyük|in ulu", q):
+        elif re.search(r"\bmaks?\b|maksimum|maximum|en buyuk|in ulu", q):
             result = max(data)
             title = f"En büyük = {self._fmt(result)}"
         else:
