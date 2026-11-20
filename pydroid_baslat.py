@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Pydroid 3 başlatıcısı: IDE'de ▶ ile çalıştır, soru yaz, LaTeX al.
+"""Pydroid 3 başlatıcısı: IDE'de ▶ ile çalıştır, soru yaz, render edilmiş resim al.
 
 Terminal gerektirmez: Pydroid 3'te bu dosyayı açıp ▶ düğmesine bas.
-Soruları `soru>` penceresine yaz; her çözüm deftere kopyalanabilir
-LaTeX blokları halinde çıktı penceresine yazılır. `çıkış` yazınca
-oturumdaki tüm çözümler defter.md / defter.html / defter.txt olarak
-bu dosyanın yanına kaydedilir.
+Soruları `soru>` penceresine yaz; her çözüm hem deftere kopyalanabilir
+LaTeX blokları hem de formülleri çizilmiş PNG resim olarak üretilir.
+Resmi telefonda Galeri/Görseller'den açıp defterine bakarak yazabilirsin.
+`çıkış` yazınca tüm çözümler defter.md / defter.html / defter.txt olarak
+ve PNG'ler defter_resim/ klasörüne kaydedilir.
 """
 
 import os
@@ -21,9 +22,21 @@ EXIT_WORDS = {"çıkış", "cikis", "exit", "quit", "q"}
 def main() -> int:
     from mathpad.cli import _print_latex
 
+    base = os.path.dirname(os.path.abspath(__file__))
+    png_dir = os.path.join(base, "defter_resim")
+    try:
+        import matplotlib  # noqa: F401
+
+        png_ok = True
+    except ImportError:
+        png_ok = False
+        print("Not: matplotlib kurulu değil; PNG resim üretilemeyecek.")
+        print("PNG için Pydroid Pip menüsünden 'matplotlib' kur.")
+
     engine = MathPad()
     notebook = Notebook(title="Pydroid Defteri")
     failures = 0
+    solved = 0
 
     print("=" * 50)
     print("MathPad'e hoş geldin!")
@@ -42,12 +55,21 @@ def main() -> int:
         try:
             solution = engine.ask(question)
             notebook.add(solution)
-            _print_latex(solution)
+            solved += 1
+            _print_latex(solution, notebook_mode=False)
+            if png_ok:
+                try:
+                    from mathpad.rendering.png import save_solution_png
+
+                    path = save_solution_png(solution, png_dir, solved)
+                    print(f"📷 resim: {path}")
+                except Exception as exc:
+                    print(f"(resim üretilemedi: {exc})")
         except (NoSolverFound, SolverError, ValueError) as exc:
             failures += 1
             print(f"hata: {exc}")
 
-    base = os.path.dirname(os.path.abspath(__file__))
+
     print("\n" + "=" * 50)
     print(f"defter: {notebook.save_markdown(os.path.join(base, 'defter.md'))}")
     print(f"html:   {notebook.save_html(os.path.join(base, 'defter.html'))}")

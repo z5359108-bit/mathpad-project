@@ -52,6 +52,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--text", metavar="DOSYA", help="Düz metin defter yolu")
     parser.add_argument("-s", "--solver", help="Zorla kullanılacak çözücü adı")
     parser.add_argument("-p", "--pretty", action="store_true", help="LaTeX yerine unicode okunabilir çıktı")
+    parser.add_argument("--png", metavar="KLASÖR", help="Her çözümü render edilmiş PNG resim olarak bu klasöre kaydet")
     parser.add_argument("--list", action="store_true", help="Kayıtlı çözücüleri listele")
     return parser
 
@@ -117,6 +118,9 @@ def main(argv: list[str] | None = None) -> int:
                         print(f"[{solution.solver}] {solution.title}: {solution.result_text}")
                 else:
                     _print_latex(solution)
+                if args.png:
+                    from .rendering.png import save_solution_png
+                    print(f"resim: {save_solution_png(solution, args.png, solved)}")
             except (NoSolverFound, SolverError, ValueError) as exc:
                 failures += 1
                 print(f"hata: {exc}", file=sys.stderr)
