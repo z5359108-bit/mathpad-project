@@ -153,7 +153,31 @@
    3 x + 4 = 10
    $$
 
-2. **Çözüm kümesi**
+2. **Bilinmeyenli terimler bir tarafta, sabitler diğer tarafta**
+
+   $$
+   3 x = 6
+   $$
+
+3. **Her iki tarafı 3'ye böl**
+
+   $$
+   \frac{ 3 x }{ 3 } = \frac{ 6 }{ 3 }
+   $$
+
+4. **Kök**
+
+   $$
+   x = 2
+   $$
+
+5. **Kontrol**
+
+   $$
+   x = 2 \Rightarrow 10 = 10 \;\checkmark
+   $$
+
+6. **Çözüm kümesi**
 
    $$
    \left\{ x : 2\right\}
@@ -180,19 +204,31 @@
    x^{2} - 3 x + 2 = 0
    $$
 
-3. **Diskriminant**
+3. **Katsayılar**
 
    $$
-   \Delta = b^2 - 4ac = 1
+   a = 1, \quad b = -3, \quad c = 2
    $$
 
-4. **Yorum**
+4. **Diskriminant formülü**
+
+   $$
+   \Delta = b^2 - 4ac = -3^2 - 4 \cdot 1 \cdot 2 = 1
+   $$
+
+5. **Yorum**
 
    $$
    \Delta > 0 \Rightarrow \text{iki farklı gerçek kök}
    $$
 
-5. **Çözüm kümesi**
+6. **Kök formülü**
+
+   $$
+   x_{1,2} = \frac{-b \pm \sqrt{\Delta}}{2a} = \frac{3 \pm \sqrt{1}}{2} \Rightarrow x_1 = 2, \; x_2 = 1
+   $$
+
+7. **Çözüm kümesi**
 
    $$
    \left[ \left\{ x : 1\right\}, \  \left\{ x : 2\right\}\right]
@@ -219,19 +255,25 @@
    x^{2} + 1 = 0
    $$
 
-3. **Diskriminant**
+3. **Katsayılar**
 
    $$
-   \Delta = b^2 - 4ac = -4
+   a = 1, \quad b = 0, \quad c = 1
    $$
 
-4. **Yorum**
+4. **Diskriminant formülü**
+
+   $$
+   \Delta = b^2 - 4ac = 0^2 - 4 \cdot 1 \cdot 1 = -4
+   $$
+
+5. **Yorum**
 
    $$
    \Delta < 0 \Rightarrow \text{gerçek kök yok, karmaşık kökler var}
    $$
 
-5. **Çözüm kümesi**
+6. **Çözüm kümesi**
 
    $$
    \left[ \left\{ x : - i\right\}, \  \left\{ x : i\right\}\right]
@@ -343,7 +385,26 @@
    \frac{d}{dx}\left[x^{3} + 2 x\right]
    $$
 
-3. **Sonuç**
+3. **Toplama-çıkarma kuralı**
+   her terim ayrı türetilir
+
+   $$
+   \left(f \pm g\right)' = f' \pm g'
+   $$
+
+4. **Kuvvet (üs) kuralı**
+
+   $$
+   \frac{d}{dx}\left[x^{3}\right] = 3 \cdot x^{2}
+   $$
+
+5. **Sabit ile çarpım kuralı**
+
+   $$
+   \left(c \cdot f\right)' = c \cdot f'
+   $$
+
+6. **Sonuç**
 
    $$
    3 x^{2} + 2
@@ -371,7 +432,25 @@
    \frac{d}{dx}\left[e^{x} \sin{\left(x \right)}\right]
    $$
 
-3. **Sonuç**
+3. **Çarpım kuralı**
+
+   $$
+   \left(u \cdot v\right)' = u'v + uv'
+   $$
+
+4. **Türev tablosu (e^x)**
+
+   $$
+   \frac{d}{dx}\left[e^{x}\right] = e^{x}
+   $$
+
+5. **Türev tablosu (sin)**
+
+   $$
+   \frac{d}{dx}[\sin x] = \cos x
+   $$
+
+6. **Sonuç**
 
    $$
    e^{x} \sin{\left(x \right)} + e^{x} \cos{\left(x \right)}
@@ -405,7 +484,10 @@
    \frac{d}{dx}\left[x^{4}\right]
    $$
 
-4. **Sonuç**
+4. **Türevi tekrar tekrar uygula**
+   2 kez ardışık türev alınır
+
+5. **Sonuç**
 
    $$
    12 x^{2}
@@ -427,7 +509,19 @@
    x^{2}
    $$
 
-2. **Sonuç**
+2. **Integral kuralı**
+
+   $$
+   \int x^{n} \, dx = \frac{x^{n+1}}{n+1} + C \quad (n \neq -1)
+   $$
+
+3. **Bu terimin integrali**
+
+   $$
+   \frac{x^{3}}{3}
+   $$
+
+4. **Sonuç**
 
    $$
    \frac{x^{3}}{3}
@@ -455,19 +549,25 @@
    \int_{0}^{3}
    $$
 
-3. **Belirsiz integral (antitürev)**
+3. **Integral kuralı**
+
+   $$
+   \int x^{n} \, dx = \frac{x^{n+1}}{n+1} + C \quad (n \neq -1)
+   $$
+
+4. **Bu terimin integrali**
 
    $$
    \frac{x^{3}}{3}
    $$
 
-4. **Aralıkta değerlendirme**
+5. **Kalkülüsün ana teoremi: sınırları yerine koy**
 
    $$
-   \left[\frac{x^{3}}{3}\right]_{0}^{3}
+   \left[\frac{x^{3}}{3}\right]_{0}^{3} = 9 - 0
    $$
 
-5. **Sonuç**
+6. **Sonuç**
 
    $$
    9
@@ -495,19 +595,25 @@
    \int_{0}^{\pi}
    $$
 
-3. **Belirsiz integral (antitürev)**
+3. **Integral kuralı**
+
+   $$
+   \int \sin(ax+b) \, dx = -\frac{\cos(ax+b)}{a} + C
+   $$
+
+4. **Bu terimin integrali**
 
    $$
    - \cos{\left(x \right)}
    $$
 
-4. **Aralıkta değerlendirme**
+5. **Kalkülüsün ana teoremi: sınırları yerine koy**
 
    $$
-   \left[- \cos{\left(x \right)}\right]_{0}^{\pi}
+   \left[- \cos{\left(x \right)}\right]_{0}^{\pi} = 1 - -1
    $$
 
-5. **Sonuç**
+6. **Sonuç**
 
    $$
    2
@@ -534,7 +640,32 @@
    x \to 0
    $$
 
-3. **Limit hesabı**
+3. **0/0 belirsizliği**
+   doğrudan yerine koyma yetmez
+
+   $$
+   x \to 0 \Rightarrow \frac{\sin{\left(x \right)}}{x} = \frac{0}{0}
+   $$
+
+4. **L'Hôpital kuralı**
+
+   $$
+   \lim \frac{f(x)}{g(x)} = \lim \frac{f'(x)}{g'(x)} \quad \left(\frac{0}{0}\right)
+   $$
+
+5. **Türetilmiş kesir**
+
+   $$
+   \frac{ \cos{\left(x \right)} }{ 1 }
+   $$
+
+6. **Önemli trigonometrik limit**
+
+   $$
+   \lim_{t \to 0} \frac{1 - \cos t}{t^{2}} = \frac{1}{2}
+   $$
+
+7. **Sonuç**
 
    $$
    1
@@ -561,7 +692,26 @@
    x \to 2
    $$
 
-3. **Limit hesabı**
+3. **0/0 belirsizliği**
+   doğrudan yerine koyma yetmez
+
+   $$
+   x \to 2 \Rightarrow \frac{x^{2} - 4}{x - 2} = \frac{0}{0}
+   $$
+
+4. **Ortak çarpanı sadeleştir**
+
+   $$
+   \frac{x^{2} - 4}{x - 2} = x + 2
+   $$
+
+5. **Sadeleştirilmiş biçimde hesapla**
+
+   $$
+   x \to 2 \Rightarrow x + 2 = 4
+   $$
+
+6. **Sonuç**
 
    $$
    4
@@ -588,7 +738,20 @@
    x \to \infty
    $$
 
-3. **Limit hesabı**
+3. **Sonsuzda derece kuralı**
+   rasyonel ifadelerde sonsuzdaki limit baş katsayılardan bulunur
+
+   $$
+   \deg(\text{pay}) = 1, \quad \deg(\text{payda}) = 1
+   $$
+
+4. **Kuralın sonucu**
+
+   $$
+   \lim = 3 \quad (n = m, \text{baş katsayı oranı})
+   $$
+
+5. **Sonuç**
 
    $$
    3
@@ -615,7 +778,14 @@
    x \to \infty
    $$
 
-3. **Limit hesabı**
+3. **Doğrudan yerine koyma**
+   fonksiyon noktada tanımlı ve süreklidir
+
+   $$
+   x = \infty \Rightarrow 1
+   $$
+
+4. **Sonuç**
 
    $$
    1

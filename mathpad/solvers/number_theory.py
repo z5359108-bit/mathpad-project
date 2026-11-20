@@ -9,7 +9,7 @@ import sympy as sp
 
 from ..rendering.latex import to_latex
 from ..rendering.text import to_text
-from ..utils import extract_numbers, replace_decimal_comma
+from ..utils import extract_numbers, fold_turkmen, replace_decimal_comma
 from .base import Solution, Solver, Step
 
 _KW_STRONG = ("ebob", "obeb", "gcd", "ekok", "okek", "lcm", "asal", "prime", "çarpanla",
@@ -27,15 +27,15 @@ class NumberTheorySolver(Solver):
     title = "Sayı Teorisi"
 
     def can_handle(self, question: str) -> float:
-        q = question.lower()
+        q = fold_turkmen(question).lower()
         if _COMB.search(q) or _PERM.search(q) or _MOD.search(q):
             return 0.9
-        if re.search(r"ebob|obeb|gcd|ekok|okek|lcm|asal|prime|kombinasyon|permutasyon|çarpanla|factoriz", q):
+        if re.search(r"ebob|obeb|gcd|ekok|okek|lcm|asal|prime|kombinasyon|permutasyon|çarpanla|factoriz|bolegi|boluji", q):
             return 0.85
         return self._score(q, strong=_KW_STRONG, weak=_KW_WEAK)
 
     def solve(self, question: str) -> Solution:
-        q = question.lower()
+        q = fold_turkmen(question).lower()
         if re.search(r"ebob|obeb|gcd", q):
             numbers = self._ints(question, min_count=2)
             return self._gcd(numbers, question)

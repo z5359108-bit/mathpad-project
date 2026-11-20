@@ -15,9 +15,14 @@ Yalnızca `sympy`'ye dayanır; tüm çözücüler eklenebilir/çıkarılabilir e
 | Sayı Teorisi | EBOB/EKOK, asallık testi, asal çarpanlar, bölenler, modüler aritmetik, kombinasyon/permutasyon |
 | İstatistik | ortalama, medyan, mod, varyans, standart sapma, toplam, min/max, adet |
 
-- **Türkçe/İngilizce** soru dili: `x^2 - 3x + 2 = 0`, `x^2 - 5x + 6 çarpanlara ayır`, `derivative of exp(2*x)` — hepsi çalışır.
+- **Türkçe / Türkmençe / İngilizce** soru dili: `x^2 - 3x + 2 = 0`, `deňlemäni çöz: 3x + 4 = 10`, `x^2 fonksiyoniniň hosylayyşyny al`, `derivative of exp(2*x)` — hepsi çalışır.
 - **LaTeX çıktı**: her çözüm `$$...$$` bloklarıyla üretilir; HTML defteri MathJax ile tarayıcıda canlı render eder.
 - **Akıllı yönlendirme**: motor her çözücünün güven skorunu hesaplar; en iyi çözücü hata verirse sıradakini dener.
+- **Kural tabanlı adım adım çözüm** (v1.2): sadece sonuç değil, defterine yazabileceğin kurallı adımlar:
+  - Türev: toplama-çıkarma kuralı, sabit × f, çarpım kuralı, kuvvet kuralı, zincir kuralı, türev tablosu
+  - İntegral: toplama kuralı, sabit ile çarpım, kuvvet kuralı, `u = ax + b` değişken değiştirme, integral tablosu
+  - Limit: 0/0 belirsizlik analizi, ortak çarpan sadeleştirmesi, L'Hôpital kuralı, sonsuzda derece kuralı, trigonometrik limitler (`sin(t)/t → 1`)
+  - Cebir: lineer denklemde terim taşıma → bölme → kök → kontrol akışı; ikinci derecede katsayılar + diskriminant formülü + kök formülü
 
 ## Yapı
 

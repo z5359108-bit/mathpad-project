@@ -8,15 +8,16 @@ import sympy as sp
 
 from ..rendering.latex import to_latex
 from ..rendering.text import to_text
-from ..utils import normalize, try_sympify, try_sympify_lenient
+from ..utils import fold_turkmen, normalize, try_sympify, try_sympify_lenient
+from ..steps import linear_eq_steps
 from .base import Solution, Solver, Step
 
 _KW_STRONG = ("denklem", "çöz", "coz", "solve", "equation", "kök", "çarpan", "factor",
-              "expand", "genişlet", "simplify", "basitleşt", "sadeleş")
+              "expand", "genişlet", "simplify", "basitleşt", "sadeleş", "denlem")
 _KW_WEAK = ("değişken", "bilinmeyen", "polinom", "polynomial")
 _SPLIT = re.compile(r"[,;]|\bve\b|\band\b", flags=re.IGNORECASE)
 _EQ_NOISE = r"\b(?:solve|çöz|çözün|coz|denklemini|denklemi|denklem|sistemi|equation|equations|" \
-            r"köklerini|kökleri|bul|nedir|kaçtır|root|roots)\b"
+            r"köklerini|kökleri|bul|nedir|kaçtır|root|roots|denlem\S*|denlemani)\b"
 _FX_NOISE = r"\b(?:factor\S*|çarpanlar?\S*|factorize|expand|genişlet|aç\b|" \
             r"simplify|basitleştir\S*|basitleş\S*|sadeleş\S*|sadeleştir\S*|" \
             r"ifadesini|ifadeyi|ifade|expression|ay[iı]r\S*)\b"
@@ -32,6 +33,7 @@ def _clean(text: str) -> str:
 
 def _extract_equations(text: str) -> list[sp.Eq]:
     cleaned = re.sub(_EQ_NOISE, " ", _clean(text), flags=re.IGNORECASE)
+    cleaned = cleaned.replace(":", " ")
     equations: list[sp.Eq] = []
     for part in _SPLIT.split(cleaned):
         part = part.strip()
@@ -50,7 +52,7 @@ class AlgebraSolver(Solver):
     title = "Cebir"
 
     def can_handle(self, question: str) -> float:
-        q = question.lower()
+        q = fold_turkmen(question).lower()
         if "=" in q:
             if _extract_equations(question):
                 score = 0.75
@@ -67,8 +69,9 @@ class AlgebraSolver(Solver):
             return self._transform(question)
         return self._solve_equations(question)
 
+
     def _is_transform_request(self, question: str) -> bool:
-        return bool(re.search(r"\bfactor|çarpan|expand|genişlet|simplify|basitleşt|sadeleş", question.lower()))
+        return bool(re.search(r"\bfactor|çarpan|expand|genişlet|simplify|basitleşt|sadeleş", fold_turkmen(question).lower()))
 
     def _solution(self, question: str, result, steps: list[Step], title: str) -> Solution:
         return Solution(
@@ -129,7 +132,14 @@ class AlgebraSolver(Solver):
             a, b, c = poly.all_coeffs()
             delta = sp.simplify(b**2 - 4 * a * c)
             steps.append(Step("Standard biçim", latex=f"{to_latex(sp.expand(poly_expr))} = 0"))
-            steps.append(Step("Diskriminant", latex=f"\\Delta = b^2 - 4ac = {to_latex(delta)}"))
+            steps.append(Step(
+                "Katsayılar",
+                latex=f"a = {to_latex(a)}, \\quad b = {to_latex(b)}, \\quad c = {to_latex(c)}",
+            ))
+            steps.append(Step(
+                "Diskriminant formülü",
+                latex=f"\\Delta = b^2 - 4ac = {to_latex(b)}^2 - 4 \\cdot {to_latex(a)} \\cdot {to_latex(c)} = {to_latex(delta)}",
+            ))
             if delta > 0:
                 note = "\\Delta > 0 \\Rightarrow \\text{iki farklı gerçek kök}"
             elif delta == 0:
@@ -137,6 +147,21 @@ class AlgebraSolver(Solver):
             else:
                 note = "\\Delta < 0 \\Rightarrow \\text{gerçek kök yok, karmaşık kökler var}"
             steps.append(Step("Yorum", latex=note))
+            if delta >= 0:
+                root_a = (-b + sp.sqrt(delta)) / (2 * a)
+                root_b = (-b - sp.sqrt(delta)) / (2 * a)
+                steps.append(Step(
+                    "Kök formülü",
+                    latex=f"x_{{1,2}} = \\frac{{-b \\pm \\sqrt{{\\Delta}}}}{{2a}} = \\frac{{{to_latex(-b)} \\pm \\sqrt{{{to_latex(delta)}}}}}{{{to_latex(2 * a)}}} \\Rightarrow x_1 = {to_latex(root_a)}, \\; x_2 = {to_latex(root_b)}",
+                ))
+
+        if not is_quadratic and len(equations) == 1 and len(symbols) == 1:
+            try:
+                poly_lin = sp.Poly(poly_expr, main_var)
+                if poly_lin.degree() == 1:
+                    steps.extend(linear_eq_steps(equations[0], main_var))
+            except sp.PolynomialError:
+                pass
 
         results = sp.solve(equations, symbols, dict=True)
         if not results:

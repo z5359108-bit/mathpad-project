@@ -7,12 +7,13 @@ import statistics as stats
 
 from ..rendering.latex import to_latex
 from ..rendering.text import to_text
-from ..utils import extract_numbers
+from ..utils import extract_numbers, fold_turkmen
 from .base import Solution, Solver, Step
 
 _KW_STRONG = ("ortalama", "mean", "average", "medyan", "median", "mod ", "tepe", "modu",
               "standart sapma", "std", "sapma", "varyans", "variance", "toplam", "sum",
-              "adet", "count", "eleman", "min", "maksimum", "maximum", "en küçük", "en büyük")
+              "adet", "count", "eleman", "min", "maksimum", "maximum", "en küçük", "en büyük",
+              "jemi", "orta", "in ulu", "in kici")
 _KW_WEAK = ("liste", "list", "veri", "data", "sayı", "değer")
 
 
@@ -31,14 +32,14 @@ class StatisticsSolver(Solver):
     title = "İstatistik"
 
     def can_handle(self, question: str) -> float:
-        q = question.lower()
+        q = fold_turkmen(question).lower()
         if re.search(r"\[[\d\s,.;-]+\]", q):
             return min(self._score(q, strong=_KW_STRONG, weak=_KW_WEAK) + 0.3, 1.0)
         return self._score(q, strong=_KW_STRONG, weak=_KW_WEAK)
 
     def solve(self, question: str) -> Solution:
         data = _extract_list(question)
-        q = question.lower()
+        q = fold_turkmen(question).lower()
         steps: list[Step] = [
             Step("Veri seti", content=data, detail=f"n = {len(data)}"),
         ]
@@ -60,17 +61,17 @@ class StatisticsSolver(Solver):
             result = stats.multimode(data)
             steps.append(Step("En sık tekrar eden değerler", content=result))
             title = f"Mod = {result}"
-        elif re.search(r"toplam|sum", q):
+        elif re.search(r"toplam|sum|jemi", q):
             result = sum(data)
             steps.append(Step("Toplama", latex=" + ".join(self._fmt(x) for x in data)))
             title = f"Toplam = {self._fmt(result)}"
         elif re.search(r"adet|count|eleman", q):
             result = len(data)
             title = f"Eleman sayısı = {result}"
-        elif re.search(r"\bmin\b|en küçük", q):
+        elif re.search(r"\bmin\b|en küçük|in kici", q):
             result = min(data)
             title = f"En küçük = {self._fmt(result)}"
-        elif re.search(r"\bmaks?\b|maksimum|maximum|en büyük", q):
+        elif re.search(r"\bmaks?\b|maksimum|maximum|en büyük|in ulu", q):
             result = max(data)
             title = f"En büyük = {self._fmt(result)}"
         else:

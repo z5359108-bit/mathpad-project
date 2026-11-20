@@ -6,6 +6,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any
 
+from ..utils import fold_turkmen
+
 
 @dataclass
 class Step:
@@ -51,7 +53,7 @@ class Solver(ABC):
     @staticmethod
     def _score(question: str, strong: tuple[str, ...], weak: tuple[str, ...] = ()) -> float:
         """Anahtar kelime puanlaması: güçlü kelime 0.45, zayıf 0.15."""
-        q = question.lower()
+        q = fold_turkmen(question).lower()
         score = 0.0
         strong_hits = sum(1 for w in strong if w in q)
         score += min(strong_hits, 2) * 0.45

@@ -25,6 +25,17 @@ _UNICODE_HINTS = {
 }
 _SUPERSCRIPTS = {"⁰": "0", "¹": "1", "²": "2", "³": "3", "⁴": "4", "⁵": "5", "⁶": "6", "⁷": "7", "⁸": "8", "⁹": "9"}
 
+# Türkmençe özel harfleri ASCII eşdeğerlerine indirger.
+_TURKMEN_FOLD = str.maketrans({
+    "ä": "a", "Ä": "a", "ň": "n", "Ň": "n", "ý": "y", "Ý": "y",
+    "ž": "z", "Ž": "z",
+})
+
+
+def fold_turkmen(text: str) -> str:
+    """Türkmençe özgü harfleri (ä/ň/ý/ž) ASCII eşdeğerlerine indirger."""
+    return text.translate(_TURKMEN_FOLD)
+
 GENERIC_NOISE = frozenset(
     {
         "what", "is", "the", "of", "calculate", "compute", "find", "kaç", "kactir",
@@ -34,12 +45,19 @@ GENERIC_NOISE = frozenset(
         "fonksiyonlar", "ifade", "ifadesi", "ifadesinin", "expression", "değişken",
         "elemanlı", "eleman", "kümenin", "kümesini", "sayılarının", "sayilarinin", "ise",
         "ayır", "ayir", "ayr", "ayırma", "in", "nin", "ın", "un", "ün",
+        "hasapla", "hasaplan", "hasaplank", "alyn", "alynyz", "aliniz",
+        "denlemesini", "denlemani", "denlemesin", "denlemelerini",
+        "cak", "cakini", "ceki", "cek", "hosylayysyny", "hosylayysy", "hosylayys",
+        "hosylayysyny", "hosylayysy", "hosylayys", "hosylayyşini",
+        "hosylayyşy", "hosylayyş", "hosylap", "funksiyanin", "funksiya",
+        "tapyar", "tapyn", "hosy",
     }
 )
 
 
 def normalize(text: str) -> str:
     """Unicode operatörleri ve süper üstleri sympy'nin anlayacağı biçime çevir."""
+    text = fold_turkmen(text)
     for src, dst in _UNICODE_HINTS.items():
         text = text.replace(src, dst)
     text = re.sub(r"√\s*\(([^)]+)\)", r"sqrt(\1)", text)
@@ -100,11 +118,15 @@ def replace_decimal_comma(text: str) -> str:
     return re.sub(r"(?<=\d),(?=\d)(?!\s*\d)", ".", text)
 
 
+_NOISE_PREFIXES = ("hosylay", "fonksiyon", "funksiya", "denlem", "hosy")
+
+
 def extract_expression(text: str, extra_noise: frozenset[str] = frozenset()) -> str:
     """Soru cümlesinden matematiksel ifade adayını çıkarır.
 
     Yaklaşım: matematik karakterlerini koruyan bir tokenizer ile kelimelere
-    böl, gürültü kelimelerini at, + ve - işaretlerini koru, gerisini birleştir.
+    böl, gürültü kelimelerini at (Türkmençe ekleri önekten tanır), + ve -
+    işaretlerini koru, gerisini birleştir.
     """
     tokens = re.findall(r"[\w+\-*/^().,%]+", normalize(text))
     noise = GENERIC_NOISE | extra_noise
@@ -112,6 +134,8 @@ def extract_expression(text: str, extra_noise: frozenset[str] = frozenset()) -> 
     for token in tokens:
         head = token.split("(")[0].lower()
         if head in noise or token.lower() in noise:
+            continue
+        if head.startswith(_NOISE_PREFIXES):
             continue
         if re.fullmatch(r"[*/^.,()]+", token):
             continue

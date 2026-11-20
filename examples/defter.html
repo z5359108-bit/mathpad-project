@@ -65,6 +65,18 @@ $$</li></ol></section>
 <section><h2>7. Denklem çözümü</h2><p class="question"><strong>Soru:</strong> 3*x + 4 = 10 denklemini çöz<br><small>çözücü: <code>algebra</code></small></p><p class="result"><strong>Sonuç:</strong> $$\left[ \left\{ x : 2\right\}\right]$$</p><ol class="steps"><li><strong>Denklemler</strong>$$
 3 x + 4 = 10
 $$</li>
+<li><strong>Bilinmeyenli terimler bir tarafta, sabitler diğer tarafta</strong>$$
+3 x = 6
+$$</li>
+<li><strong>Her iki tarafı 3'ye böl</strong>$$
+\frac{ 3 x }{ 3 } = \frac{ 6 }{ 3 }
+$$</li>
+<li><strong>Kök</strong>$$
+x = 2
+$$</li>
+<li><strong>Kontrol</strong>$$
+x = 2 \Rightarrow 10 = 10 \;\checkmark
+$$</li>
 <li><strong>Çözüm kümesi</strong>$$
 \left\{ x : 2\right\}
 $$</li></ol></section>
@@ -74,11 +86,17 @@ $$</li>
 <li><strong>Standard biçim</strong>$$
 x^{2} - 3 x + 2 = 0
 $$</li>
-<li><strong>Diskriminant</strong>$$
-\Delta = b^2 - 4ac = 1
+<li><strong>Katsayılar</strong>$$
+a = 1, \quad b = -3, \quad c = 2
+$$</li>
+<li><strong>Diskriminant formülü</strong>$$
+\Delta = b^2 - 4ac = -3^2 - 4 \cdot 1 \cdot 2 = 1
 $$</li>
 <li><strong>Yorum</strong>$$
 \Delta > 0 \Rightarrow \text{iki farklı gerçek kök}
+$$</li>
+<li><strong>Kök formülü</strong>$$
+x_{1,2} = \frac{-b \pm \sqrt{\Delta}}{2a} = \frac{3 \pm \sqrt{1}}{2} \Rightarrow x_1 = 2, \; x_2 = 1
 $$</li>
 <li><strong>Çözüm kümesi</strong>$$
 \left[ \left\{ x : 1\right\}, \  \left\{ x : 2\right\}\right]
@@ -89,8 +107,11 @@ $$</li>
 <li><strong>Standard biçim</strong>$$
 x^{2} + 1 = 0
 $$</li>
-<li><strong>Diskriminant</strong>$$
-\Delta = b^2 - 4ac = -4
+<li><strong>Katsayılar</strong>$$
+a = 1, \quad b = 0, \quad c = 1
+$$</li>
+<li><strong>Diskriminant formülü</strong>$$
+\Delta = b^2 - 4ac = 0^2 - 4 \cdot 1 \cdot 1 = -4
 $$</li>
 <li><strong>Yorum</strong>$$
 \Delta < 0 \Rightarrow \text{gerçek kök yok, karmaşık kökler var}
@@ -128,6 +149,15 @@ $$</li>
 <li><strong>Türev işlemi</strong>$$
 \frac{d}{dx}\left[x^{3} + 2 x\right]
 $$</li>
+<li><strong>Toplama-çıkarma kuralı</strong><br><small>her terim ayrı türetilir</small>$$
+\left(f \pm g\right)' = f' \pm g'
+$$</li>
+<li><strong>Kuvvet (üs) kuralı</strong>$$
+\frac{d}{dx}\left[x^{3}\right] = 3 \cdot x^{2}
+$$</li>
+<li><strong>Sabit ile çarpım kuralı</strong>$$
+\left(c \cdot f\right)' = c \cdot f'
+$$</li>
 <li><strong>Sonuç</strong>$$
 3 x^{2} + 2
 $$</li></ol></section>
@@ -136,6 +166,15 @@ e^{x} \sin{\left(x \right)}
 $$</li>
 <li><strong>Türev işlemi</strong>$$
 \frac{d}{dx}\left[e^{x} \sin{\left(x \right)}\right]
+$$</li>
+<li><strong>Çarpım kuralı</strong>$$
+\left(u \cdot v\right)' = u'v + uv'
+$$</li>
+<li><strong>Türev tablosu (e^x)</strong>$$
+\frac{d}{dx}\left[e^{x}\right] = e^{x}
+$$</li>
+<li><strong>Türev tablosu (sin)</strong>$$
+\frac{d}{dx}[\sin x] = \cos x
 $$</li>
 <li><strong>Sonuç</strong>$$
 e^{x} \sin{\left(x \right)} + e^{x} \cos{\left(x \right)}
@@ -149,11 +188,18 @@ $$</li>
 <li><strong>Türev işlemi</strong>$$
 \frac{d}{dx}\left[x^{4}\right]
 $$</li>
+<li><strong>Türevi tekrar tekrar uygula</strong><br><small>2 kez ardışık türev alınır</small></li>
 <li><strong>Sonuç</strong>$$
 12 x^{2}
 $$</li></ol></section>
 <section><h2>17. Belirsiz integral</h2><p class="question"><strong>Soru:</strong> integral of x^2 dx<br><small>çözücü: <code>calculus</code></small></p><p class="result"><strong>Sonuç:</strong> $$\frac{x^{3}}{3}$$</p><ol class="steps"><li><strong>Fonksiyon</strong><br><small>değişken: x</small>$$
 x^{2}
+$$</li>
+<li><strong>Integral kuralı</strong>$$
+\int x^{n} \, dx = \frac{x^{n+1}}{n+1} + C \quad (n \neq -1)
+$$</li>
+<li><strong>Bu terimin integrali</strong>$$
+\frac{x^{3}}{3}
 $$</li>
 <li><strong>Sonuç</strong>$$
 \frac{x^{3}}{3}
@@ -164,11 +210,14 @@ $$</li>
 <li><strong>Belirli integral aralığı</strong>$$
 \int_{0}^{3}
 $$</li>
-<li><strong>Belirsiz integral (antitürev)</strong>$$
+<li><strong>Integral kuralı</strong>$$
+\int x^{n} \, dx = \frac{x^{n+1}}{n+1} + C \quad (n \neq -1)
+$$</li>
+<li><strong>Bu terimin integrali</strong>$$
 \frac{x^{3}}{3}
 $$</li>
-<li><strong>Aralıkta değerlendirme</strong>$$
-\left[\frac{x^{3}}{3}\right]_{0}^{3}
+<li><strong>Kalkülüsün ana teoremi: sınırları yerine koy</strong>$$
+\left[\frac{x^{3}}{3}\right]_{0}^{3} = 9 - 0
 $$</li>
 <li><strong>Sonuç</strong>$$
 9
@@ -179,11 +228,14 @@ $$</li>
 <li><strong>Belirli integral aralığı</strong>$$
 \int_{0}^{\pi}
 $$</li>
-<li><strong>Belirsiz integral (antitürev)</strong>$$
+<li><strong>Integral kuralı</strong>$$
+\int \sin(ax+b) \, dx = -\frac{\cos(ax+b)}{a} + C
+$$</li>
+<li><strong>Bu terimin integrali</strong>$$
 - \cos{\left(x \right)}
 $$</li>
-<li><strong>Aralıkta değerlendirme</strong>$$
-\left[- \cos{\left(x \right)}\right]_{0}^{\pi}
+<li><strong>Kalkülüsün ana teoremi: sınırları yerine koy</strong>$$
+\left[- \cos{\left(x \right)}\right]_{0}^{\pi} = 1 - -1
 $$</li>
 <li><strong>Sonuç</strong>$$
 2
@@ -194,7 +246,19 @@ $$</li>
 <li><strong>x -> 0 hedefi</strong>$$
 x \to 0
 $$</li>
-<li><strong>Limit hesabı</strong>$$
+<li><strong>0/0 belirsizliği</strong><br><small>doğrudan yerine koyma yetmez</small>$$
+x \to 0 \Rightarrow \frac{\sin{\left(x \right)}}{x} = \frac{0}{0}
+$$</li>
+<li><strong>L'Hôpital kuralı</strong>$$
+\lim \frac{f(x)}{g(x)} = \lim \frac{f'(x)}{g'(x)} \quad \left(\frac{0}{0}\right)
+$$</li>
+<li><strong>Türetilmiş kesir</strong>$$
+\frac{ \cos{\left(x \right)} }{ 1 }
+$$</li>
+<li><strong>Önemli trigonometrik limit</strong>$$
+\lim_{t \to 0} \frac{1 - \cos t}{t^{2}} = \frac{1}{2}
+$$</li>
+<li><strong>Sonuç</strong>$$
 1
 $$</li></ol></section>
 <section><h2>21. Limit</h2><p class="question"><strong>Soru:</strong> x->2 iken (x^2-4)/(x-2) limiti<br><small>çözücü: <code>calculus</code></small></p><p class="result"><strong>Sonuç:</strong> $$4$$</p><ol class="steps"><li><strong>Fonksiyon</strong>$$
@@ -203,7 +267,16 @@ $$</li>
 <li><strong>x -> 2 hedefi</strong>$$
 x \to 2
 $$</li>
-<li><strong>Limit hesabı</strong>$$
+<li><strong>0/0 belirsizliği</strong><br><small>doğrudan yerine koyma yetmez</small>$$
+x \to 2 \Rightarrow \frac{x^{2} - 4}{x - 2} = \frac{0}{0}
+$$</li>
+<li><strong>Ortak çarpanı sadeleştir</strong>$$
+\frac{x^{2} - 4}{x - 2} = x + 2
+$$</li>
+<li><strong>Sadeleştirilmiş biçimde hesapla</strong>$$
+x \to 2 \Rightarrow x + 2 = 4
+$$</li>
+<li><strong>Sonuç</strong>$$
 4
 $$</li></ol></section>
 <section><h2>22. Limit</h2><p class="question"><strong>Soru:</strong> limit of (3*x + 1)/x as x->inf<br><small>çözücü: <code>calculus</code></small></p><p class="result"><strong>Sonuç:</strong> $$3$$</p><ol class="steps"><li><strong>Fonksiyon</strong>$$
@@ -212,7 +285,13 @@ $$</li>
 <li><strong>x -> \infty hedefi</strong>$$
 x \to \infty
 $$</li>
-<li><strong>Limit hesabı</strong>$$
+<li><strong>Sonsuzda derece kuralı</strong><br><small>rasyonel ifadelerde sonsuzdaki limit baş katsayılardan bulunur</small>$$
+\deg(\text{pay}) = 1, \quad \deg(\text{payda}) = 1
+$$</li>
+<li><strong>Kuralın sonucu</strong>$$
+\lim = 3 \quad (n = m, \text{baş katsayı oranı})
+$$</li>
+<li><strong>Sonuç</strong>$$
 3
 $$</li></ol></section>
 <section><h2>23. Limit</h2><p class="question"><strong>Soru:</strong> limit of 2^(1/x) as x->inf<br><small>çözücü: <code>calculus</code></small></p><p class="result"><strong>Sonuç:</strong> $$1$$</p><ol class="steps"><li><strong>Fonksiyon</strong>$$
@@ -221,7 +300,10 @@ $$</li>
 <li><strong>x -> \infty hedefi</strong>$$
 x \to \infty
 $$</li>
-<li><strong>Limit hesabı</strong>$$
+<li><strong>Doğrudan yerine koyma</strong><br><small>fonksiyon noktada tanımlı ve süreklidir</small>$$
+x = \infty \Rightarrow 1
+$$</li>
+<li><strong>Sonuç</strong>$$
 1
 $$</li></ol></section>
 <section><h2>24. Taylor serisi açılımı</h2><p class="question"><strong>Soru:</strong> taylor series of sin(x), 5 terms<br><small>çözücü: <code>calculus</code></small></p><p class="result"><strong>Sonuç:</strong> $$\frac{x^{9}}{362880} - \frac{x^{7}}{5040} + \frac{x^{5}}{120} - \frac{x^{3}}{6} + x$$</p><ol class="steps"><li><strong>Fonksiyon</strong><br><small>değişken: x</small>$$

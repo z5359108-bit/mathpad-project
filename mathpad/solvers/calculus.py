@@ -8,12 +8,13 @@ import sympy as sp
 
 from ..rendering.latex import to_latex
 from ..rendering.text import to_text
-from ..utils import extract_expression, normalize, pick_symbol, try_sympify
+from ..steps import derivative_steps, integral_steps, limit_steps
+from ..utils import extract_expression, fold_turkmen, normalize, pick_symbol, try_sympify
 from .base import Solution, Solver, Step
 
 _KW_STRONG = ("türev", "derivative", "integral", "limit", "sınır", "taylor",
-              "seri", "maclaurin", "d/dx", "∫")
-_KW_WEAK = ("fonksiyon", "function", "eğri", "yaklaş", "approach", "dx", "açılım")
+              "seri", "maclaurin", "d/dx", "∫", "hosylay", "çak", "çek")
+_KW_WEAK = ("fonksiyon", "function", "eğri", "yaklaş", "approach", "dx", "açılım", "cek")
 
 _ORDER_WORDS = {"ikinci": 2, "second": 2, "üçüncü": 3, "third": 3, "dördüncü": 4, "fourth": 4}
 _DEF_TR = re.compile(
@@ -117,15 +118,15 @@ class CalculusSolver(Solver):
     title = "Kalkülüs"
 
     def can_handle(self, question: str) -> float:
-        return self._score(question.lower(), strong=_KW_STRONG, weak=_KW_WEAK)
+        return self._score(fold_turkmen(question).lower(), strong=_KW_STRONG, weak=_KW_WEAK)
 
     def solve(self, question: str) -> Solution:
-        q = question.lower()
-        if re.search(r"türev|derivative|d/dx", q):
+        q = fold_turkmen(question).lower()
+        if re.search(r"türev|derivative|d/dx|hosylay", q):
             return self._derivative(question)
         if re.search(r"integral|∫", q):
             return self._integral(question)
-        if re.search(r"limit|sınır\b|yaklaş", q):
+        if re.search(r"limit|sınır\b|yaklaş|\bçak\b|\bçek\b|\bcek\b", q):
             return self._limit(question)
         if re.search(r"taylor|maclaurin|seri|açılım", q):
             return self._series(question)
@@ -156,9 +157,14 @@ class CalculusSolver(Solver):
         if order != 1:
             steps.append(Step(f"{order}. mertebeden türev isteniyor",
                               latex=f"\\frac{{d^{order}}}{{d{var.name}^{order}}}"))
-        result = sp.diff(expr, var, order)
         steps.append(Step("Türev işlemi",
                           latex=f"\\frac{{d}}{{d{var.name}}}\\left[{to_latex(expr)}\\right]"))
+        if order == 1:
+            steps.extend(derivative_steps(expr, var))
+        else:
+            steps.append(Step("Türevi tekrar tekrar uygula",
+                              detail=f"{order} kez ardışık türev alınır"))
+        result = sp.diff(expr, var, order)
         steps.append(Step("Sonuç", content=result))
         return self._solution(question, result, steps, "Türev" if order == 1 else f"{order}. mertebeden türev")
 
@@ -175,16 +181,16 @@ class CalculusSolver(Solver):
             raise ValueError(f"Fonksiyon ayrıştırılamadı: '{candidate}'")
         var = pick_symbol(expr)
         steps.append(Step("Fonksiyon", content=expr, detail=f"değişken: {var.name}"))
+        steps.extend(integral_steps(expr, var))
         if bounds:
             lower, upper = bounds[0], bounds[1]
-            steps.append(Step("Belirli integral aralığı",
-                              latex=f"\\int_{{{to_latex(lower)}}}^{{{to_latex(upper)}}}"))
             antiderivative = sp.integrate(expr, var)
-            steps.append(Step("Belirsiz integral (antitürev)", content=antiderivative))
             result = sp.integrate(expr, (var, lower, upper))
+            steps.insert(1, Step("Belirli integral aralığı",
+                                 latex=f"\\int_{{{to_latex(lower)}}}^{{{to_latex(upper)}}}"))
             steps.append(Step(
-                "Aralıkta değerlendirme",
-                latex=f"\\left[{to_latex(antiderivative)}\\right]_{{{to_latex(lower)}}}^{{{to_latex(upper)}}}",
+                "Kalkülüsün ana teoremi: sınırları yerine koy",
+                latex=f"\\left[{to_latex(antiderivative)}\\right]_{{{to_latex(lower)}}}^{{{to_latex(upper)}}} = {to_latex(antiderivative.subs(var, upper))} - {to_latex(antiderivative.subs(var, lower))}",
             ))
         else:
             result = sp.integrate(expr, var)
@@ -211,8 +217,9 @@ class CalculusSolver(Solver):
         steps.append(Step("Fonksiyon", content=expr))
         steps.append(Step(f"{var.name} -> {to_latex(value)} hedefi",
                           latex=f"{var.name} \\to {to_latex(value)}"))
+        steps.extend(limit_steps(expr, var, value))
         result = sp.limit(expr, var, value, "+-")
-        steps.append(Step("Limit hesabı", content=result))
+        steps.append(Step("Sonuç", content=result))
         return self._solution(question, result, steps, "Limit")
 
     def _series(self, question: str) -> Solution:
