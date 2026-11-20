@@ -507,26 +507,25 @@ class AdvancedAlgebraSolver(Solver):
             syms = sorted(target.free_symbols, key=lambda sym: sym.name)
             if len(syms) == 2:
                 target_value = sp.simplify(target.subs({syms[0]: x1, syms[1]: x2}))
+        S, P = sp.Symbol("S"), sp.Symbol("P")
         formulas = (
-            (r"x_1^{2} + x_2^{2}", lambda u, v: u**2 + v**2,
-             r"x_1^{2} + x_2^{2} = \left(x_1 + x_2\right)^2 - 2x_1x_2"),
-            (r"x_1^{3} + x_2^{3}", lambda u, v: u**3 + v**3,
-             r"x_1^{3} + x_2^{3} = \left(x_1 + x_2\right)^3 - 3x_1x_2\left(x_1 + x_2\right)"),
-            (r"\frac{1}{x_1} + \frac{1}{x_2}", lambda u, v: 1 / u + 1 / v,
-             r"\frac{1}{x_1} + \frac{1}{x_2} = \frac{x_1 + x_2}{x_1x_2}"),
+            (r"x_1^{2} + x_2^{2}", S**2 - 2 * P,
+             r"x_1^{2} + x_2^{2} = \left(x_1 + x_2\right)^2 - 2x_1x_2",
+             lambda sv, pv, cv: rf"{formula_label} = {_L(sv)}^2 - 2 \cdot {_L(pv)} = {_L(sp.simplify(sv**2))} - {_L(2 * pv)} = {_L(cv)}"),
+            (r"x_1^{3} + x_2^{3}", S**3 - 3 * P * S,
+             r"x_1^{3} + x_2^{3} = \left(x_1 + x_2\right)^3 - 3x_1x_2\left(x_1 + x_2\right)",
+             lambda sv, pv, cv: rf"{formula_label} = {_L(sv)}^3 - 3 \cdot {_L(pv)} \cdot {_L(sv)} = {_L(cv)}"),
+            (r"\frac{1}{x_1} + \frac{1}{x_2}", S / P,
+             r"\frac{1}{x_1} + \frac{1}{x_2} = \frac{x_1 + x_2}{x_1x_2}",
+             lambda sv, pv, cv: rf"{formula_label} = \frac{{ {_L(sv)} }}{{ {_L(pv)} }} = {_L(cv)}"),
         )
-        s_sym, p_sym = sp.Symbol("S"), sp.Symbol("P")
         if target_value is not None:
-            for formula_label, formula, identity in formulas:
-                via_symbols = formula(s_sym, p_sym).subs({s_sym: s, p_sym: p})
-                if sp.simplify(via_symbols - target_value) == 0:
+            for formula_label, identity_expr, identity, numeric_latex in formulas:
+                candidate = sp.simplify(identity_expr.subs({S: s, P: p}))
+                if sp.simplify(candidate - target_value) == 0:
                     steps.append(Step("Özdeşlik", latex=identity))
                     steps.append(Step("Vieta değerlerini yerine koy",
-                                      latex=rf"{formula_label} = {_L(formula(s_sym, p_sym))} = {_L(formula(s, p))}"))
-                    if s != 0 and p != 0:
-                        s2 = sp.simplify(s**2) if formula_label.startswith("x_1^{2}") else None
-                        if s2 is not None:
-                            steps.append(Step("Adım adım", latex=rf"{_L(s)}^2 - 2 \cdot {_L(p)} = {_L(s2)} - {_L(2 * p)}"))
+                                      latex=numeric_latex(s, p, candidate)))
                     steps.append(Step("Sonuç", content=target_value))
                     return self._solution(question, target_value, steps, "Vieta uygulaması")
         if target_value is None:
