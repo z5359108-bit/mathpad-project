@@ -47,9 +47,27 @@ pip install -r requirements.txt   # yalnızca sympy
 
 ## Kullanım
 
+### Ana menü (önerilen)
+
+Her şey bu menüden yönetilir — soru çözme, defter kaydetme, çıktı biçimi ve ayarlar:
+
 ```bash
-# Tek soru (çıktı her zaman LaTeX'tir, deftere kopyalamak için)
-python -m mathpad "integral of x^2 from 0 to 3"
+python mathpad_menu.py
+```
+
+```
+  1) Soru çöz                  ← tek soru sor, cevabı ayarındaki biçimde al
+  2) Serbest mod               ← art arda soru sor ('menu' ile dön)
+  3) Defterim                  ← .md/.html/.txt kaydet, PNG döktür, listele
+  4) Ayarlar                   ← çıktı biçimi (latex/png/ikisi/pretty), DPI…
+  5) Örnek sorular             ← hazır sorulardan dene
+  6) Çözücüleri listele
+  0) Çıkış                     ← oturumu otomatik deftere kaydeder
+```
+
+Ayarlar `ayarlar.json` dosyasına kaydedilir; bir sonraki açışta hatırlanır.
+
+### Komut satırı (script yazacaklar için)
 
 # Deftere kaydet (LaTeX'li Markdown + MathJax HTML)
 python -m mathpad --notebook defter.md --html defter.html "x^2 - 3x + 2 = 0"
@@ -77,12 +95,17 @@ python -m mathpad --solver calculus "d/dx sin(x)*x"
 
 ### Pydroid 3 (telefon)
 
-Pydroid 3'te terminal ile uğraşmak istemiyorsan `pydroid_baslat.py` dosyasını
-IDE'de açıp ▶ düğmesine bas: sorularını yaz, her cevap LaTeX blokları halinde
-çıktı penceresine gelir ve formülleri çizilmiş PNG resim olarak
-`defter_resim/` klasörüne kaydedilir (Galeri'den açıp defterine bakarak
-yazabilirsin); `çıkış` yazınca oturum `defter.md` / `defter.html` /
-`defter.txt` olarak kaydedilir.
+Pydroid 3'te `pydroid_baslat.py` dosyasını IDE'de açıp ▶ düğmesine bas:
+**MathPad ana menüsü** açılır. Menüden:
+
+- `4) Ayarlar` → `1) Çıktı biçimi` → `2) png` seçersen her cevabın formülleri
+  **çizilmiş resim** olarak `defter_resim/` klasörüne kaydedilir; Galeri'den
+  açıp defterine bakarak yazarsın.
+- `ikisi` seçersen hem LaTeX bloğu hem resim üretilir.
+- `0) Çıkış` deyince oturumdaki tüm çözümler `defter.md` / `defter.html` /
+  `defter.txt` olarak kaydedilir.
+
+İlk kurulumda Pydroid Pip menüsünden `sympy` ve `matplotlib` kur.
 
 Python API:
 
