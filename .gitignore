@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Ortam & IDE
+.env
+.idea/
+.vscode/
+
+# Test & build
+.pytest_cache/
+.coverage
+dist/
+build/
