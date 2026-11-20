@@ -10,11 +10,18 @@ yazılabilir LaTeX formatında** verir (`$$...$$` blokları, MathJax uyumlu HTML
 ```bash
 pip install -r requirements.txt        # yalnızca sympy
 
-# Tek soru — çözümü doğrudan LaTeX olarak al
-cd zeyrox-proje && python -m mathpad --latex "integral of x^2 from 0 to 3"
+# Tek soru — çıktı her zaman deftere kopyalanabilir LaTeX'tir
+python -m mathpad "integral of x^2 from 0 to 3"
 
-# Interaktif REPL + defter kaydı
+# Etkileşimli REPL: her cevap LaTeX blokları ($$...$$) halinde gelir
+python -m mathpad
 python -m mathpad --notebook defter.md --html defter.html
+
+# Terminalde okunabilir unicode çıktı istersen
+python -m mathpad --pretty "(2+3)*4"
+
+# Pydroid 3 (telefon): terminal gerekmez, bu dosyayı açıp ▶'a bas
+pydroid_baslat.py   # çıkışta defter.md / defter.html / defter.txt kaydeder
 
 # 47 soruluk vitrin + otomatik doğrulama
 python mathpad_demo.py

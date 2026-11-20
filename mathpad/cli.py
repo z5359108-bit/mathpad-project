@@ -10,10 +10,11 @@ from .notebook import Notebook
 from .solvers import DEFAULT_SOLVERS
 
 
-def _print_latex(solution) -> None:
+def _print_latex(solution, notebook_mode: bool = True) -> None:
     from .rendering.latex import step_to_latex
 
-    print("% --- LaTeX çıktısı (defterine kopyala) ---")
+    if notebook_mode:
+        print("% --- LaTeX çıktısı (defterine kopyala) ---")
     print(f"\\textbf{{Soru:}} {solution.question}\\\\")
     print("$$")
     print(f"\\text{{{solution.title}}}: {solution.result_tex}")
@@ -50,7 +51,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--html", metavar="DOSYA", help="MathJax'lı HTML defter yolu")
     parser.add_argument("--text", metavar="DOSYA", help="Düz metin defter yolu")
     parser.add_argument("-s", "--solver", help="Zorla kullanılacak çözücü adı")
-    parser.add_argument("--latex", action="store_true", help="Çözümü deftere kopyalanabilir LaTeX olarak yaz")
+    parser.add_argument("-p", "--pretty", action="store_true", help="LaTeX yerine unicode okunabilir çıktı")
     parser.add_argument("--list", action="store_true", help="Kayıtlı çözücüleri listele")
     return parser
 
@@ -109,11 +110,13 @@ def main(argv: list[str] | None = None) -> int:
                     solution = engine.ask(question)
                 notebook.add(solution)
                 solved += 1
-                if args.latex:
+                if args.pretty:
+                    if interactive:
+                        _print_solution(solution)
+                    else:
+                        print(f"[{solution.solver}] {solution.title}: {solution.result_text}")
+                else:
                     _print_latex(solution)
-                    break
-                if interactive:
-                    _print_solution(solution)
             except (NoSolverFound, SolverError, ValueError) as exc:
                 failures += 1
                 print(f"hata: {exc}", file=sys.stderr)
