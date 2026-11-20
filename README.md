@@ -44,7 +44,7 @@ Yalnızca `sympy`'ye dayanır; tüm çözücüler eklenebilir/çıkarılabilir e
 │       ├── arithmetic.py, algebra.py, calculus.py,
 │       ├── advanced_algebra.py, advanced_analysis.py,
 │       ├── linear_algebra.py, number_theory.py, statistics.py
-├── tests/                   # birim testleri (mathpad: 179; şifreleme araçlarıyla birlikte ~215)
+├── tests/                   # birim testleri (mathpad: 244; şifreleme araçlarıyla birlikte 280)
 ├── examples/                # demo çıktıları (defter.md, defter.html, defter.txt)
 ├── demo.py                  # 47 soruluk vitrin + doğrulama (repo kopyasında mathpad_demo.py)
 └── requirements.txt

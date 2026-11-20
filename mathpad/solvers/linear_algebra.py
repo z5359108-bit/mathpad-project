@@ -43,6 +43,8 @@ class LinearAlgebraSolver(Solver):
 
     def can_handle(self, question: str) -> float:
         q = question.lower()
+        if re.search(r"[<>]", q) and not _MATRICES.search(q):
+            return 0.0
         matrix_score = 0.7 if _MATRICES.search(q) else 0.0
         keyword_score = self._score(q, strong=_KW_STRONG, weak=_KW_WEAK)
         return min(max(matrix_score, keyword_score), 1.0)

@@ -296,9 +296,11 @@ class AdvancedAnalysisSolver(Solver):
                 curves.append(sp.Integer(0))
             if len(curves) < 2:
                 return None
-            return {"f": curves[0], "g": curves[1], "var": var, "a": a, "b": b}
+            return {"f": curves[0], "g": curves[1], "var": var, "a": a, "b": b,
+                    "verticals": verticals}
         if len(curves) >= 2:
-            return {"f": curves[0], "g": curves[1], "var": var, "a": None, "b": None}
+            return {"f": curves[0], "g": curves[1], "var": var, "a": None, "b": None,
+                    "verticals": verticals}
         return None
 
     def _solve_area(self, question: str, data) -> Solution:
@@ -307,17 +309,25 @@ class AdvancedAnalysisSolver(Solver):
         steps.append(Step("Eğriler", latex=rf"y = {_L(f)}, \quad y = {_L(g)}"))
         if data["a"] is None:
             intersections = [r for r in sp.solve(sp.Eq(f, g), var) if r.is_real]
-            if len(intersections) < 2:
+            verticals = [v for v in data.get("verticals") or []]
+            candidates = sorted(
+                [r for r in intersections + verticals if sp.sympify(r).is_real],
+                key=lambda r: float(r.evalf()))
+            if len(intersections) >= 2:
+                a, b = candidates[:2]
+            elif len(candidates) >= 2:
+                a, b = candidates[0], candidates[-1]
+            else:
                 raise ValueError("İki eğri arasında sınırlı kapalı bölge bulunamadı.")
-            a, b = sorted(intersections, key=lambda r: float(r.evalf()))[:2]
-            steps.append(Step("Kesişim noktaları",
-                              latex=rf"{_L(f)} = {_L(g)} \Rightarrow {_L(var)} = {_L(a)}, \; {_L(b)}"))
+            steps.append(Step("Sınır noktaları",
+                              latex=rf"{_L(var)} = {_L(a)}, \; {_L(b)}"))
         else:
             a, b = data["a"], data["b"]
             steps.append(Step("Dik sınır doğruları",
                               latex=rf"{_L(var)} = {_L(a)}, \quad {_L(var)} = {_L(b)}"))
-        upper = f.subs(var, sp.Rational(a + b) / 2)
-        lower = g.subs(var, sp.Rational(a + b) / 2)
+        mid = (a + b) / 2
+        upper = f.subs(var, mid)
+        lower = g.subs(var, mid)
         if float(upper.evalf()) < float(lower.evalf()):
             f, g = g, f
         diff = sp.expand(f - g)

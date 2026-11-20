@@ -28,6 +28,8 @@ class NumberTheorySolver(Solver):
 
     def can_handle(self, question: str) -> float:
         q = fold_turkmen(question).lower()
+        if re.search(r"polinom|b[oö]lünd[uü][kg]ünde", q):
+            return 0.0
         if _COMB.search(q) or _PERM.search(q) or _MOD.search(q):
             return 0.9
         if re.search(r"ebob|obeb|gcd|ekok|okek|lcm|asal|prime|kombinasyon|permutasyon|carpanla|factoriz|bolegi|boluji", q):

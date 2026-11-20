@@ -37,6 +37,10 @@ class StatisticsSolver(Solver):
             r"funksi\w*|fonksi\w*|aral[iı][ğg]|aralik|interval|noktas|turev|türev|integral|ekstremum|te[gğ]et|f\s*\(", q
         ):
             return 0.0
+        if re.search(r"[a-zA-Z_]{3,}\s*\(", question) and not re.search(
+            r"sqrt|sin|cos|tan|log|ln|exp|abs|arcsin|arccos|min\(|max\(", question
+        ):
+            return 0.0
         if re.search(r"\[[\d\s,.;-]+\]", q):
             return min(self._score(q, strong=_KW_STRONG, weak=_KW_WEAK) + 0.3, 1.0)
         return self._score(q, strong=_KW_STRONG, weak=_KW_WEAK)

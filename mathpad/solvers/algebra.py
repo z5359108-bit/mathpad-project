@@ -48,18 +48,40 @@ def _extract_equations(text: str) -> list[sp.Eq]:
     return equations
 
 
+_INDEXED_SYMBOL = re.compile(r"^[a-z]_?\d{0,2}$")
+
+
+def _unknown_symbol(question: str) -> str | None:
+    try:
+        equations = _extract_equations(question)
+    except Exception:  # noqa: BLE001
+        return None
+    for eq in equations:
+        for expr in (eq.lhs, eq.rhs):
+            for sym in expr.free_symbols:
+                name = sym.name
+                if len(name) < 3 or _INDEXED_SYMBOL.fullmatch(name):
+                    continue
+                if name in {"pi", "oo", "zoo", "inf"}:
+                    continue
+                return name
+    return None
+
+
 class AlgebraSolver(Solver):
     name = "algebra"
     title = "Cebir"
 
     _OTHER_DOMAIN = re.compile(
         r"t\u00fcrev|turev|derivative|d/dx|integral|limit|hosylay|onumi|\u00f6n\u00fcmi"
-        r"|te[gğ]et|tangent|ekstremum|extremum|meydan|alan|area|differensial"
+        r"|te[gğ]et|tangent|ekstremum|extremum|meydan|alan|area|differensial|diferens"
     )
 
     def can_handle(self, question: str) -> float:
         q = fold_turkmen(question).lower()
         if self._OTHER_DOMAIN.search(q):
+            return 0.0
+        if _unknown_symbol(question):
             return 0.0
         if "=" in q:
             if _extract_equations(question):
@@ -73,6 +95,10 @@ class AlgebraSolver(Solver):
         return self._score(q, strong=_KW_STRONG, weak=_KW_WEAK)
 
     def solve(self, question: str) -> Solution:
+        unknown = _unknown_symbol(question)
+        if unknown:
+            raise ValueError(
+                f"Soruda tanınmayan '{unknown}' sembolü var; soru anlaşılamadı.")
         if self._is_transform_request(question):
             return self._transform(question)
         return self._solve_equations(question)

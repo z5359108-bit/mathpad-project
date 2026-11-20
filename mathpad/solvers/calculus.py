@@ -13,7 +13,7 @@ from ..utils import extract_expression, fold_turkmen, normalize, pick_symbol, tr
 from .base import Solution, Solver, Step
 
 _KW_STRONG = ("turev", "türev", "derivative", "integral", "limit", "sinir", "sınır", "taylor",
-              "seri", "maclaurin", "d/dx", "∫", "hosylay", "cak", "cek", "onumi", "onumi", "turev", "differensial")
+              "seri", "maclaurin", "d/dx", "∫", "hosylay", "cak", "cek", "onumi", "onum", "turev", "differensial", "differensialyn", "differensialyny", "diferensial", "diferensialyn", "diferensialyny", "diferensiyal", "diferensiyalyn", "diferensiyalyny", "lim")
 _KW_WEAK = ("fonksiyon", "function", "egri", "yaklas", "approach", "dx", "acilim", "cek")
 
 _ORDER_WORDS = {"ikinci": 2, "ikinji": 2, "second": 2, "onumi": 2, "önümi": 2,
@@ -25,6 +25,7 @@ _DEF_TR = re.compile(
 _DEF_EN = re.compile(rf"\bfrom\s*{_BOUND}\s*(?:to|up\s*to)\s*{_BOUND}")
 _DEF_SYM = re.compile(r"∫\s*_?\s*\{?\s*([^{}\s,]+)\s*\}?\s*\^\s*\{?\s*([^{}\s,]+)\s*\}?")
 _LIMIT = re.compile(r"(\w+)\s*(?:->|\u2192|yaklas?i[rğ]?[en]*k?e?n?|yaklasi[rğ]?[en]*|approaches|approaching|goes\s*to)\s*(-?[\w.∞]+[+-]?)")
+_PIPES_TO_ABS = re.compile(r"\|([^|]+)\|")
 _NOISE = frozenset({
     "türev", "türevi", "türevini", "derivative", "integral", "integrali", "integralini",
     "al", "alınız", "hesapla", "bul", "nedir", "limit", "limiti", "limitini",
@@ -33,10 +34,12 @@ _NOISE = frozenset({
     "fonksiyonunun", "fonksiyonun", "iken", "around", "etrafında", "sıfırda",
     "order", "derece", "terim", "terimli", "terimi", "terms", "derecesi", "mertebeden",
     "birinci", "ikinci", "üçüncü", "dördüncü", "beşinci", "first", "second", "third", "fourth", "fifth",
-    "ikinji", "onumi", "önümi", "funksiyanyn", "funksiyanin", "funksiyanynyn",
+    "ikinji", "onum", "onumi", "önümi", "funksiyanyn", "funksiyanin", "funksiyanynyn",
     "turev", "turevi", "turevini", "turevleri", "turevleri",
     "differensial", "differensialyny", "differensialyn",
     "tapyn", "tapy", "tap", "tapmaly", "tapmag",
+    "lim", "diferensial", "diferensialyny", "diferensialyn",
+    "diferensiyal", "diferensiyalyny", "diferensiyalyn",
 })
 
 
@@ -133,11 +136,11 @@ class CalculusSolver(Solver):
 
     def solve(self, question: str) -> Solution:
         q = fold_turkmen(question).lower()
-        if re.search(r"türev|turev|derivative|differensial|d/dx|hosylay|ikinji|onumi|onumi", q):
-            return self._derivative(question)
+        if re.search(r"türev|turev|derivative|d/dx|hosylay|ikinji|onumi|önümi|differensial|diferensial|diferensiyal", q):
+            return self._derivative(question, differential=bool(re.search(r"differensial|diferensial|diferensiyal", q)))
         if re.search(r"integral|∫", q):
             return self._integral(question)
-        if re.search(r"limit|sınır\b|sinir\b|yaklaş|yaklas|\bçak\b|\bcak\b|\bçek\b|\bcek\b", q):
+        if re.search(r"limit|lim\b|sınır\b|sinir\b|yaklaş|yaklas|\bçak\b|\bcak\b|\bçek\b|\bcek\b", q):
             return self._limit(question)
         if re.search(r"taylor|maclaurin|seri|açılım|acilim", q):
             return self._series(question)
@@ -154,10 +157,11 @@ class CalculusSolver(Solver):
             steps=steps,
         )
 
-    def _derivative(self, question: str) -> Solution:
+    def _derivative(self, question: str, differential: bool = False) -> Solution:
         steps: list[Step] = []
         order = _order_of(question)
         question = re.sub(r"\b(?:y|f|g)\s*\(\s*([a-z])\s*\)\s*=\s*", " ", question, flags=re.IGNORECASE)
+        question = _PIPES_TO_ABS.sub(r"abs(\1)", question)
         q = re.sub(r"d/dx", " ", question, flags=re.IGNORECASE)
         q = _clean_order_phrases(q)
         candidate = extract_expression(q, extra_noise=_NOISE)
@@ -193,13 +197,20 @@ class CalculusSolver(Solver):
         if trig != result:
             _latex = to_latex
             steps.append(Step(
-                "Trigonometrik \u00f6zde\u015flik",
+                "Trigonometrik özdeşlik",
                 latex=rf"{_latex(result)} = {_latex(trig)}",
             ))
             combined = trig
         result = combined
+        if differential:
+            dx = sp.Symbol("dx")
+            steps.append(Step("Diferensiyal",
+                              latex=rf"df = {to_latex(result)}\,dx",
+                              detail="diferensiyal = türev × dx"))
+            result = result * dx
         steps.append(Step("Sonuç", content=result))
-        return self._solution(question, result, steps, "Türev" if order == 1 else f"{order}. mertebeden türev")
+        title = "Diferensiyal" if differential else ("Türev" if order == 1 else f"{order}. mertebeden türev")
+        return self._solution(question, result, steps, title)
 
     def _integral(self, question: str) -> Solution:
         question = re.sub(r"\b(?:y|f|g)\s*\(\s*([a-z])\s*\)\s*=\s*", " ", question, flags=re.IGNORECASE)
@@ -246,6 +257,22 @@ class CalculusSolver(Solver):
                     latex=f"{to_latex(upper_at)} - {to_latex(lower_at)} = {to_latex(result)}",
                     detail="sıfır terimi düşer",
                 ))
+            divergent = result == sp.nan or result.has(sp.oo) or result == sp.zoo
+            if divergent:
+                singulars = []
+                try:
+                    num, den = sp.together(expr).as_numer_denom()
+                    singulars = [r for r in sp.solve(sp.Eq(den, 0), var)
+                                 if r.is_real and (lower <= r <= upper)]
+                except Exception:  # noqa: BLE001
+                    singulars = []
+                steps.append(Step("Tekillik kontrolü",
+                                  latex=", ".join(rf"{to_latex(var)} = {to_latex(r)}" for r in singulars),
+                                  detail="aralık içinde integrande tanımsızlık var"))
+                steps.append(Step("Iraksak integral",
+                                  latex=r"\text{integral yakınsak değil}",
+                                  detail="sonuç sonlu değil; bu integral yakınsak değildir"))
+                result = "Iraksak integral (yakınsak değil)"
         else:
             result = sp.integrate(expr, var)
         steps.append(Step("Sonuç", content=result))
@@ -280,6 +307,20 @@ class CalculusSolver(Solver):
                           latex=f"{var.name} \\to {to_latex(value)}"))
         steps.extend(limit_steps(expr, var, value))
         result = sp.limit(expr, var, value, direction if direction else "+-")
+        if not direction and (result == sp.zoo or result == sp.nan):
+            left = sp.limit(expr, var, value, "-")
+            right = sp.limit(expr, var, value, "+")
+            steps.append(Step("Soldan limit",
+                              latex=rf"\lim_{{{var.name} \to {to_latex(value)}^-}} = {to_latex(left)}"))
+            steps.append(Step("Sağdan limit",
+                              latex=rf"\lim_{{{var.name} \to {to_latex(value)}^+}} = {to_latex(right)}"))
+            if left != right:
+                steps.append(Step("Limit mevcut değil",
+                                  latex="\\lim_{x \\to a} f(x) \\nexists",
+                                  detail=f"sol değer {to_text(left)}, sağ değer {to_text(right)}; ikisi farklı"))
+                return self._solution(question, "Limit mevcut değil (sol ve sağ limitler farklı)",
+                                      steps, "Limit (yok)")
+            result = left
         steps.append(Step("Sonuç", content=result))
         return self._solution(question, result, steps, "Limit")
 

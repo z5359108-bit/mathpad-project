@@ -53,8 +53,8 @@ class TestReviewFixes(unittest.TestCase):
     def test_turkmen_derivative_routing(self):
         sol = self._ask("f(x)=3x^3+cos(2x)-3 differensialyny tapyn")
         self.assertEqual(sol.solver, "calculus")
-        expected = 9 * sp.Symbol("x") ** 2 - 2 * sp.sin(2 * sp.Symbol("x"))
-        self.assertEqual(sp.simplify(sol.result - expected), 0)
+        fprime = 9 * sp.Symbol("x") ** 2 - 2 * sp.sin(2 * sp.Symbol("x"))
+        self.assertEqual(sp.simplify(sol.result - fprime * sp.Symbol("dx")), 0)
 
     def test_transcendental_log_equation(self):
         sol = self._ask("log_2(x)=x-3")
