@@ -1,18 +1,58 @@
 # zeyrox_projects
 
-Kişisel Python araçları ve test ortamı. Tüm araçlar yalnızca standart kütüphaneyi (stdlib) kullanır, ek bağımlılık gerektirmez.
+Kişisel Python araçları, şifreleme araçları ve **MathPad** matematik çözücü.
+
+## MathPad — Modüler Akıllı Matematik Çözücü
+
+Doğal dille yazılan matematik sorularını adım adım çözer, sonuçları **deftere
+yazılabilir LaTeX formatında** verir (`$$...$$` blokları, MathJax uyumlu HTML defteri).
+
+```bash
+pip install -r requirements.txt        # yalnızca sympy
+
+# Tek soru — çözümü doğrudan LaTeX olarak al
+cd zeyrox-proje && python -m mathpad --latex "integral of x^2 from 0 to 3"
+
+# Interaktif REPL + defter kaydı
+python -m mathpad --notebook defter.md --html defter.html
+
+# 47 soruluk vitrin + otomatik doğrulama
+python mathpad_demo.py
+```
+
+Kapsam: aritmetik (yüzde/faktöriyel), cebir (denklem sistemleri, diskriminant analizi,
+çarpanlara ayırma), kalkülüs (türev, integral, limit, Taylor serisi), lineer cebir
+(determinant, ters, özdeğer/özvektör), sayı teorisi (EBOB/EKOK, asallık, kombinasyon),
+istatistik (ortalama, medyan, varyans, standart sapma).
+
+Detaylı mimari ve kendi çözücünü yazma rehberi: [mathpad/README bölümü](#mathpad--modüler-akıllı-matematik-çözücü) yerine `mathpad/` paket docstring'lerine ve `demo.py`'ye bak.
+
+---
+
+## Şifreleme Araçları
+
+Tüm araçlar yalnızca standart kütüphaneyi (stdlib) kullanır.
 
 ## Yapı
 
 ```
 .
+├── mathpad/                  # MathPad: modüler matematik çözücü paketi
+│   ├── engine.py             # Güven skorlu çözücü yönlendirici
+│   ├── notebook.py           # LaTeX defter üretimi (md/html/txt)
+│   ├── cli.py                # CLI + REPL
+│   ├── rendering/            # LaTeX + düz metin katmanları
+│   └── solvers/              # 6 değiştirilebilir çözücü
+├── mathpad_demo.py           # 47 soruluk doğrulamalı vitrin
+├── examples/                 # Demo defter çıktıları
 ├── base64_tool.py            # Base64 encode/decode
 ├── caesar_tool.py            # Caesar şifresi (ROT13 dahil)
 ├── vigenere_tool.py          # Vigenère şifresi
 ├── xor_tool.py               # XOR şifresi (hex çıktı)
 ├── hash_tool.py              # md5/sha1/sha256/... özet hesaplama
 ├── password_gen_tool.py      # Güvenli rastgele şifre üretici
-├── tests/                    # Her araç için birim testleri
+├── requirements.txt          # sympy (MathPad için)
+├── tests/                    # 100+ birim testi
 └── .gitignore
 ```
 
@@ -60,4 +100,10 @@ python password_gen_tool.py --length 12 --no-symbols
 
 ```bash
 python -m unittest discover -s tests -v
+```
+
+MathPad demo çıktısını yeniden üretmek için:
+
+```bash
+python mathpad_demo.py
 ```

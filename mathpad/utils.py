@@ -1,0 +1,146 @@
+"""Paylaşılan ayrıştırma ve normalleştirme yardımcıları."""
+
+from __future__ import annotations
+
+import re
+
+import sympy as sp
+
+_NUMBER = r"-?\d+(?:\.\d+)?"
+
+_UNICODE_HINTS = {
+    "∫": " integral ",
+    "Σ": " sum ",
+    "π": "pi",
+    "∞": "oo",
+    "×": "*",
+    "·": "*",
+    "⋅": "*",
+    "÷": "/",
+    "−": "-",
+    "–": "-",
+    "—": "-",
+    "≤": "<=",
+    "≥": ">=",
+}
+_SUPERSCRIPTS = {"⁰": "0", "¹": "1", "²": "2", "³": "3", "⁴": "4", "⁵": "5", "⁶": "6", "⁷": "7", "⁸": "8", "⁹": "9"}
+
+GENERIC_NOISE = frozenset(
+    {
+        "what", "is", "the", "of", "calculate", "compute", "find", "kaç", "kactir",
+        "nedir", "hesapla", "bul", "sonuc", "sonuçu", "sonucu", "getir", "please",
+        "bana", "bir", "value", "değer", "degeri", "değeri", "as", "from", "to", "up",
+        "fonksiyon", "fonksiyonu", "fonksiyonun", "fonksiyonunun", "fonksiyonunun",
+        "fonksiyonlar", "ifade", "ifadesi", "ifadesinin", "expression", "değişken",
+        "elemanlı", "eleman", "kümenin", "kümesini", "sayılarının", "sayilarinin", "ise",
+        "ayır", "ayir", "ayr", "ayırma", "in", "nin", "ın", "un", "ün",
+    }
+)
+
+
+def normalize(text: str) -> str:
+    """Unicode operatörleri ve süper üstleri sympy'nin anlayacağı biçime çevir."""
+    for src, dst in _UNICODE_HINTS.items():
+        text = text.replace(src, dst)
+    text = re.sub(r"√\s*\(([^)]+)\)", r"sqrt(\1)", text)
+    text = re.sub(r"√\s*(\w+)", r"sqrt(\1)", text)
+    text = re.sub(r"√", "sqrt", text)
+    for src, digit in _SUPERSCRIPTS.items():
+        text = text.replace(src, f"**{digit}")
+    return text
+
+
+def _insert_implicit_multiplication(text: str) -> str:
+    """'3x' -> '3*x', '2(x+1)' -> '2*(x+1)', ')(x' -> ')*(x'."""
+    text = re.sub(r"(\d)\s*([a-zA-Z(])", r"\1*\2", text)
+    text = re.sub(r"\)\s*([a-zA-Z(])", r")*\1", text)
+    return text
+
+
+def try_sympify(text: str, locals_: dict | None = None) -> sp.Basic | None:
+    """Metni sympy ifadesine çevirmeyi dene; başarısızsa None döndür."""
+    cleaned = normalize(text).strip().strip(",. ")
+    if not cleaned or cleaned.startswith("["):
+        return None
+    cleaned = _insert_implicit_multiplication(cleaned)
+    local = {"sqrt": sp.sqrt, "pi": sp.pi, "oo": sp.oo, "E": sp.E, "e": sp.E, "abs": sp.Abs,
+             "sin": sp.sin, "cos": sp.cos, "tan": sp.tan, "log": sp.log, "exp": sp.exp,
+             "ln": sp.log, "i": sp.I, "j": sp.I}
+    if locals_:
+        local.update(locals_)
+    try:
+        result = sp.sympify(cleaned, locals=local, evaluate=True)
+    except (sp.SympifyError, SyntaxError, TypeError, ValueError):
+        return None
+    if isinstance(result, (sp.Tuple, tuple, list)):
+        return None
+    return result
+
+
+def try_sympify_lenient(text: str, locals_: dict | None = None) -> sp.Basic | None:
+    """try_sympify + sondaki sözel token'ları atarak tekrar deneme ('10 denklemini çöz' -> '10')."""
+    value = try_sympify(text, locals_)
+    tokens = normalize(text).split()
+    while value is None and tokens:
+        tokens = tokens[:-1]
+        candidate = " ".join(tokens)
+        if not candidate.strip():
+            break
+        value = try_sympify(candidate, locals_)
+    return value
+
+
+def extract_numbers(text: str) -> list[float]:
+    """Metindeki tüm sayıları sırayla çıkar (ondalık ayırıcı: nokta)."""
+    return [float(m) for m in re.findall(_NUMBER, text)]
+
+
+def replace_decimal_comma(text: str) -> str:
+    """Yalnız boşluksuz '3,5' biçimindeki ondalık virgülleri noktaya çevir."""
+    return re.sub(r"(?<=\d),(?=\d)(?!\s*\d)", ".", text)
+
+
+def extract_expression(text: str, extra_noise: frozenset[str] = frozenset()) -> str:
+    """Soru cümlesinden matematiksel ifade adayını çıkarır.
+
+    Yaklaşım: matematik karakterlerini koruyan bir tokenizer ile kelimelere
+    böl, gürültü kelimelerini at, + ve - işaretlerini koru, gerisini birleştir.
+    """
+    tokens = re.findall(r"[\w+\-*/^().,%]+", normalize(text))
+    noise = GENERIC_NOISE | extra_noise
+    kept = []
+    for token in tokens:
+        head = token.split("(")[0].lower()
+        if head in noise or token.lower() in noise:
+            continue
+        if re.fullmatch(r"[*/^.,()]+", token):
+            continue
+        kept.append(token)
+    return " ".join(kept).replace(",", ", ").strip()
+
+
+def parse_matrix(text: str) -> sp.Matrix | None:
+    """[[1,2],[3,4]] veya [[1,2;3,4]] kalıplarından matris üretir."""
+    match = re.search(r"\[\s*\[[^\[\]]*\](?:\s*[,;]\s*\[[^\[\]]*\])*\s*\]", text)
+    if not match:
+        return None
+    raw = match.group(0).replace(";", ",")
+    try:
+        rows = eval(raw, {"__builtins__": {}}, {})  # noqa: S307 - girdi regex ile doğrulandı
+    except (SyntaxError, ValueError):
+        return None
+    try:
+        return sp.Matrix(rows)
+    except (ValueError, TypeError):
+        return None
+
+
+def strip_suffix(token: str) -> str:
+    """Türkçe iyelik eklerini ('nin, in, ı, i...) tokenden atar."""
+    return re.sub(r"'(n?in|nin|ın|un|ün|nuz|i|ı|s)$", "", token, flags=re.IGNORECASE)
+
+
+def pick_symbol(expr: sp.Basic) -> sp.Symbol:
+    """İfade içinde alfabetik olarak ilk serbest sembolü seç; yoksa x üret."""
+    free = sorted(expr.free_symbols, key=lambda s: s.name)
+    return free[0] if free else sp.Symbol("x")

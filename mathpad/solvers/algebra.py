@@ -1,0 +1,148 @@
+"""Cebir çözücü: denklem sistemleri, çarpanlara ayırma, açma, basitleştirme."""
+
+from __future__ import annotations
+
+import re
+
+import sympy as sp
+
+from ..rendering.latex import to_latex
+from ..rendering.text import to_text
+from ..utils import normalize, try_sympify, try_sympify_lenient
+from .base import Solution, Solver, Step
+
+_KW_STRONG = ("denklem", "çöz", "coz", "solve", "equation", "kök", "çarpan", "factor",
+              "expand", "genişlet", "simplify", "basitleşt", "sadeleş")
+_KW_WEAK = ("değişken", "bilinmeyen", "polinom", "polynomial")
+_SPLIT = re.compile(r"[,;]|\bve\b|\band\b", flags=re.IGNORECASE)
+_EQ_NOISE = r"\b(?:solve|çöz|çözün|coz|denklemini|denklemi|denklem|sistemi|equation|equations|" \
+            r"köklerini|kökleri|bul|nedir|kaçtır|root|roots)\b"
+_FX_NOISE = r"\b(?:factor\S*|çarpanlar?\S*|factorize|expand|genişlet|aç\b|" \
+            r"simplify|basitleştir\S*|basitleş\S*|sadeleş\S*|sadeleştir\S*|" \
+            r"ifadesini|ifadeyi|ifade|expression|ay[iı]r\S*)\b"
+_SUFFIXES = ("'nin", "'nın", "'nun", "'ün", "'ın", "'in", "'yi", "'yı", "'si", "'i", "'ı")
+
+
+def _clean(text: str) -> str:
+    text = normalize(text)
+    for suffix in _SUFFIXES:
+        text = text.replace(suffix, " ")
+    return text
+
+
+def _extract_equations(text: str) -> list[sp.Eq]:
+    cleaned = re.sub(_EQ_NOISE, " ", _clean(text), flags=re.IGNORECASE)
+    equations: list[sp.Eq] = []
+    for part in _SPLIT.split(cleaned):
+        part = part.strip()
+        if "=" not in part:
+            continue
+        lhs, _, rhs = part.partition("=")
+        left, right = try_sympify_lenient(lhs), try_sympify_lenient(rhs)
+        if left is None or right is None:
+            continue
+        equations.append(sp.Eq(left, right, evaluate=False))
+    return equations
+
+
+class AlgebraSolver(Solver):
+    name = "algebra"
+    title = "Cebir"
+
+    def can_handle(self, question: str) -> float:
+        q = question.lower()
+        if "=" in q:
+            if _extract_equations(question):
+                score = 0.75
+                if re.search(r"\bfactor|çarpan|expand|basitleşt|simplify", q):
+                    score = 0.9
+                return score
+            return 0.0
+        if self._is_transform_request(question):
+            return 0.9
+        return self._score(q, strong=_KW_STRONG, weak=_KW_WEAK)
+
+    def solve(self, question: str) -> Solution:
+        if self._is_transform_request(question):
+            return self._transform(question)
+        return self._solve_equations(question)
+
+    def _is_transform_request(self, question: str) -> bool:
+        return bool(re.search(r"\bfactor|çarpan|expand|genişlet|simplify|basitleşt|sadeleş", question.lower()))
+
+    def _solution(self, question: str, result, steps: list[Step], title: str) -> Solution:
+        return Solution(
+            question=question,
+            solver=self.name,
+            title=title,
+            result=result,
+            result_tex=to_latex(result),
+            result_text=to_text(result),
+            steps=steps,
+        )
+
+    def _transform(self, question: str) -> Solution:
+        steps: list[Step] = []
+        q = question.lower()
+        cleaned = re.sub(_FX_NOISE, " ", _clean(question), flags=re.IGNORECASE)
+        expr = try_sympify(cleaned)
+        if expr is None:
+            raise ValueError("İfade ayrıştırılamadı.")
+        steps.append(Step("Verilen ifade", content=expr))
+        if re.search(r"\bfactor|çarpan", q):
+            result = sp.factor(expr)
+            steps.append(Step("Çarpanlara ayırma", content=result))
+            label = "Çarpanlara ayırma"
+        elif re.search(r"\bexpand|genişlet", q):
+            result = sp.expand(expr)
+            steps.append(Step("Parantezleri açma (expand)", content=result))
+            label = "İfadeyi açma"
+        else:
+            result = sp.simplify(expr) if expr.free_symbols else sp.simplify(expr)
+            steps.append(Step("Basitleştirme", content=result))
+            label = "Basitleştirme"
+        return self._solution(question, result, steps, label)
+
+    def _solve_equations(self, question: str) -> Solution:
+        steps: list[Step] = []
+        equations = _extract_equations(question)
+        if not equations:
+            raise ValueError("Denklem bulunamadı; '=' içeren bir ifade bekleniyordu.")
+
+        symbols = sorted({sym for eq in equations for sym in eq.free_symbols}, key=lambda s: s.name)
+        if not symbols:
+            symbols = [sp.Symbol("x")]
+
+        eq_tex = " \\quad;\\quad ".join(to_latex(eq) for eq in equations)
+        steps.append(Step("Denklemler", latex=eq_tex))
+
+        main_var = symbols[0]
+        poly_expr = equations[0].lhs - equations[0].rhs
+        is_quadratic = False
+        try:
+            poly = sp.Poly(poly_expr, main_var)
+            is_quadratic = poly.degree() == 2 and len(symbols) == 1
+        except sp.PolynomialError:
+            pass
+
+        if is_quadratic:
+            a, b, c = poly.all_coeffs()
+            delta = sp.simplify(b**2 - 4 * a * c)
+            steps.append(Step("Standard biçim", latex=f"{to_latex(sp.expand(poly_expr))} = 0"))
+            steps.append(Step("Diskriminant", latex=f"\\Delta = b^2 - 4ac = {to_latex(delta)}"))
+            if delta > 0:
+                note = "\\Delta > 0 \\Rightarrow \\text{iki farklı gerçek kök}"
+            elif delta == 0:
+                note = "\\Delta = 0 \\Rightarrow \\text{çift katlı tek kök}"
+            else:
+                note = "\\Delta < 0 \\Rightarrow \\text{gerçek kök yok, karmaşık kökler var}"
+            steps.append(Step("Yorum", latex=note))
+
+        results = sp.solve(equations, symbols, dict=True)
+        if not results:
+            steps.append(Step("Sonuç", latex="\\varnothing"))
+            return self._solution(question, "∅ (gerçek sayılarda çözüm yok)", steps, "Denklem çözümü (çözüm yok)")
+
+        solution = results[0] if len(results) == 1 else results
+        steps.append(Step("Çözüm kümesi", content=solution))
+        return self._solution(question, results, steps, "Denklem çözümü")

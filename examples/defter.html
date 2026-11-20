@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>MathPad Demo Defteri</title>
+<script>
+MathJax = { tex: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']] } };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  body { font-family: -apple-system, 'Segoe UI', sans-serif; max-width: 800px;
+         margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }
+  .question { background: #eef3ff; border-left: 4px solid #3b5bdb;
+              padding: 0.5rem 1rem; border-radius: 4px; }
+  .result { background: #eafaf1; border-left: 4px solid #2f9e44;
+            padding: 0.5rem 1rem; border-radius: 4px; }
+  ol.steps > li { margin-bottom: 0.6rem; }
+  footer { color: #777; font-size: 0.85rem; margin-top: 3rem; }
+</style>
+</head>
+<body>
+<h1>MathPad Demo Defteri</h1>
+<section><h2>1. Aritmetik işlem</h2><p class="question"><strong>Soru:</strong> (2+3)*4 - 7/2<br><small>çözücü: <code>arithmetic</code></small></p><p class="result"><strong>Sonuç:</strong> $$\frac{33}{2}$$</p><ol class="steps"><li><strong>Verilen işlem</strong>$$
+\frac{33}{2}
+$$</li>
+<li><strong>Sonuç</strong>$$
+\frac{33}{2}
+$$</li></ol></section>
+<section><h2>2. Aritmetik işlem</h2><p class="question"><strong>Soru:</strong> 2^10 + sqrt(144)<br><small>çözücü: <code>arithmetic</code></small></p><p class="result"><strong>Sonuç:</strong> $$1036$$</p><ol class="steps"><li><strong>Verilen işlem</strong>$$
+1036
+$$</li>
+<li><strong>Sonuç</strong>$$
+1036
+$$</li></ol></section>
+<section><h2>3. Aritmetik işlem</h2><p class="question"><strong>Soru:</strong> sqrt(2)*sqrt(8)<br><small>çözücü: <code>arithmetic</code></small></p><p class="result"><strong>Sonuç:</strong> $$4$$</p><ol class="steps"><li><strong>Verilen işlem</strong>$$
+4
+$$</li>
+<li><strong>Sonuç</strong>$$
+4
+$$</li></ol></section>
+<section><h2>4. Faktöriyel: 5!</h2><p class="question"><strong>Soru:</strong> 5!<br><small>çözücü: <code>arithmetic</code></small></p><p class="result"><strong>Sonuç:</strong> $$120$$</p><ol class="steps"><li><strong>Faktöriyel tanımı</strong>$$
+5! = 1 \cdot 2 \cdots 5
+$$</li>
+<li><strong>Hesap</strong>$$
+120
+$$</li></ol></section>
+<section><h2>5. Yüzde hesabı: 250 sayısının %15'i</h2><p class="question"><strong>Soru:</strong> 250'nin %15'i<br><small>çözücü: <code>arithmetic</code></small></p><p class="result"><strong>Sonuç:</strong> $$\frac{75}{2}$$</p><ol class="steps"><li><strong>Sorunun okunuşu</strong>$$
+\%15 \text{ oranı, } 250 \text{ tabanı ile}
+$$</li>
+<li><strong>Yüzde formülü</strong>$$
+\frac{250 \cdot 15}{100}
+$$</li>
+<li><strong>Sonuç</strong>$$
+\frac{75}{2}
+$$</li></ol></section>
+<section><h2>6. Yüzde hesabı: 80 sayısının %15'i</h2><p class="question"><strong>Soru:</strong> 15% of 80<br><small>çözücü: <code>arithmetic</code></small></p><p class="result"><strong>Sonuç:</strong> $$12$$</p><ol class="steps"><li><strong>Sorunun okunuşu</strong>$$
+\%15 \text{ oranı, } 80 \text{ tabanı ile}
+$$</li>
+<li><strong>Yüzde formülü</strong>$$
+\frac{80 \cdot 15}{100}
+$$</li>
+<li><strong>Sonuç</strong>$$
+12
+$$</li></ol></section>
+<section><h2>7. Denklem çözümü</h2><p class="question"><strong>Soru:</strong> 3*x + 4 = 10 denklemini çöz<br><small>çözücü: <code>algebra</code></small></p><p class="result"><strong>Sonuç:</strong> $$\left[ \left\{ x : 2\right\}\right]$$</p><ol class="steps"><li><strong>Denklemler</strong>$$
+3 x + 4 = 10
+$$</li>
+<li><strong>Çözüm kümesi</strong>$$
+\left\{ x : 2\right\}
+$$</li></ol></section>
+<section><h2>8. Denklem çözümü</h2><p class="question"><strong>Soru:</strong> x^2 - 3x + 2 = 0<br><small>çözücü: <code>algebra</code></small></p><p class="result"><strong>Sonuç:</strong> $$\left[ \left\{ x : 1\right\}, \  \left\{ x : 2\right\}\right]$$</p><ol class="steps"><li><strong>Denklemler</strong>$$
+x^{2} - 3 x + 2 = 0
+$$</li>
+<li><strong>Standard biçim</strong>$$
+x^{2} - 3 x + 2 = 0
+$$</li>
+<li><strong>Diskriminant</strong>$$
+\Delta = b^2 - 4ac = 1
+$$</li>
+<li><strong>Yorum</strong>$$
+\Delta > 0 \Rightarrow \text{iki farklı gerçek kök}
+$$</li>
+<li><strong>Çözüm kümesi</strong>$$
+\left[ \left\{ x : 1\right\}, \  \left\{ x : 2\right\}\right]
+$$</li></ol></section>
+<section><h2>9. Denklem çözümü</h2><p class="question"><strong>Soru:</strong> x^2 + 1 = 0 (karmaşık kökler)<br><small>çözücü: <code>algebra</code></small></p><p class="result"><strong>Sonuç:</strong> $$\left[ \left\{ x : - i\right\}, \  \left\{ x : i\right\}\right]$$</p><ol class="steps"><li><strong>Denklemler</strong>$$
+x^{2} + 1 = 0
+$$</li>
+<li><strong>Standard biçim</strong>$$
+x^{2} + 1 = 0
+$$</li>
+<li><strong>Diskriminant</strong>$$
+\Delta = b^2 - 4ac = -4
+$$</li>
+<li><strong>Yorum</strong>$$
+\Delta < 0 \Rightarrow \text{gerçek kök yok, karmaşık kökler var}
+$$</li>
+<li><strong>Çözüm kümesi</strong>$$
+\left[ \left\{ x : - i\right\}, \  \left\{ x : i\right\}\right]
+$$</li></ol></section>
+<section><h2>10. Denklem çözümü</h2><p class="question"><strong>Soru:</strong> x + y = 5, x - y = 1<br><small>çözücü: <code>algebra</code></small></p><p class="result"><strong>Sonuç:</strong> $$\left[ \left\{ x : 3, \  y : 2\right\}\right]$$</p><ol class="steps"><li><strong>Denklemler</strong>$$
+x + y = 5 \quad;\quad x - y = 1
+$$</li>
+<li><strong>Çözüm kümesi</strong>$$
+\left\{ x : 3, \  y : 2\right\}
+$$</li></ol></section>
+<section><h2>11. Çarpanlara ayırma</h2><p class="question"><strong>Soru:</strong> x^2 - 5x + 6 çarpanlarına ayır<br><small>çözücü: <code>algebra</code></small></p><p class="result"><strong>Sonuç:</strong> $$\left(x - 3\right) \left(x - 2\right)$$</p><ol class="steps"><li><strong>Verilen ifade</strong>$$
+x^{2} - 5 x + 6
+$$</li>
+<li><strong>Çarpanlara ayırma</strong>$$
+\left(x - 3\right) \left(x - 2\right)
+$$</li></ol></section>
+<section><h2>12. İfadeyi açma</h2><p class="question"><strong>Soru:</strong> (x + 2)*(x + 3) expand<br><small>çözücü: <code>algebra</code></small></p><p class="result"><strong>Sonuç:</strong> $$x^{2} + 5 x + 6$$</p><ol class="steps"><li><strong>Verilen ifade</strong>$$
+\left(x + 2\right) \left(x + 3\right)
+$$</li>
+<li><strong>Parantezleri açma (expand)</strong>$$
+x^{2} + 5 x + 6
+$$</li></ol></section>
+<section><h2>13. Basitleştirme</h2><p class="question"><strong>Soru:</strong> simplify (x^2 - 1)/(x - 1)<br><small>çözücü: <code>algebra</code></small></p><p class="result"><strong>Sonuç:</strong> $$x + 1$$</p><ol class="steps"><li><strong>Verilen ifade</strong>$$
+\frac{x^{2} - 1}{x - 1}
+$$</li>
+<li><strong>Basitleştirme</strong>$$
+x + 1
+$$</li></ol></section>
+<section><h2>14. Türev</h2><p class="question"><strong>Soru:</strong> x^3 + 2*x fonksiyonunun türevi<br><small>çözücü: <code>calculus</code></small></p><p class="result"><strong>Sonuç:</strong> $$3 x^{2} + 2$$</p><ol class="steps"><li><strong>Fonksiyon</strong><br><small>değişken: x</small>$$
+x^{3} + 2 x
+$$</li>
+<li><strong>Türev işlemi</strong>$$
+\frac{d}{dx}\left[x^{3} + 2 x\right]
+$$</li>
+<li><strong>Sonuç</strong>$$
+3 x^{2} + 2
+$$</li></ol></section>
+<section><h2>15. Türev</h2><p class="question"><strong>Soru:</strong> d/dx sin(x)*exp(x)<br><small>çözücü: <code>calculus</code></small></p><p class="result"><strong>Sonuç:</strong> $$e^{x} \sin{\left(x \right)} + e^{x} \cos{\left(x \right)}$$</p><ol class="steps"><li><strong>Fonksiyon</strong><br><small>değişken: x</small>$$
+e^{x} \sin{\left(x \right)}
+$$</li>
+<li><strong>Türev işlemi</strong>$$
+\frac{d}{dx}\left[e^{x} \sin{\left(x \right)}\right]
+$$</li>
+<li><strong>Sonuç</strong>$$
+e^{x} \sin{\left(x \right)} + e^{x} \cos{\left(x \right)}
+$$</li></ol></section>
+<section><h2>16. 2. mertebeden türev</h2><p class="question"><strong>Soru:</strong> x^4 ikinci türev<br><small>çözücü: <code>calculus</code></small></p><p class="result"><strong>Sonuç:</strong> $$12 x^{2}$$</p><ol class="steps"><li><strong>Fonksiyon</strong><br><small>değişken: x</small>$$
+x^{4}
+$$</li>
+<li><strong>2. mertebeden türev isteniyor</strong>$$
+\frac{d^2}{dx^2}
+$$</li>
+<li><strong>Türev işlemi</strong>$$
+\frac{d}{dx}\left[x^{4}\right]
+$$</li>
+<li><strong>Sonuç</strong>$$
+12 x^{2}
+$$</li></ol></section>
+<section><h2>17. Belirsiz integral</h2><p class="question"><strong>Soru:</strong> integral of x^2 dx<br><small>çözücü: <code>calculus</code></small></p><p class="result"><strong>Sonuç:</strong> $$\frac{x^{3}}{3}$$</p><ol class="steps"><li><strong>Fonksiyon</strong><br><small>değişken: x</small>$$
+x^{2}
+$$</li>
+<li><strong>Sonuç</strong>$$
+\frac{x^{3}}{3}
+$$</li></ol></section>
+<section><h2>18. Belirli integral</h2><p class="question"><strong>Soru:</strong> integral of x^2 from 0 to 3<br><small>çözücü: <code>calculus</code></small></p><p class="result"><strong>Sonuç:</strong> $$9$$</p><ol class="steps"><li><strong>Fonksiyon</strong><br><small>değişken: x</small>$$
+x^{2}
+$$</li>
+<li><strong>Belirli integral aralığı</strong>$$
+\int_{0}^{3}
+$$</li>
+<li><strong>Belirsiz integral (antitürev)</strong>$$
+\frac{x^{3}}{3}
+$$</li>
+<li><strong>Aralıkta değerlendirme</strong>$$
+\left[\frac{x^{3}}{3}\right]_{0}^{3}
+$$</li>
+<li><strong>Sonuç</strong>$$
+9
+$$</li></ol></section>
+<section><h2>19. Belirli integral</h2><p class="question"><strong>Soru:</strong> sin(x) fonksiyonunun 0 dan pi ye integrali<br><small>çözücü: <code>calculus</code></small></p><p class="result"><strong>Sonuç:</strong> $$2$$</p><ol class="steps"><li><strong>Fonksiyon</strong><br><small>değişken: x</small>$$
+\sin{\left(x \right)}
+$$</li>
+<li><strong>Belirli integral aralığı</strong>$$
+\int_{0}^{\pi}
+$$</li>
+<li><strong>Belirsiz integral (antitürev)</strong>$$
+- \cos{\left(x \right)}
+$$</li>
+<li><strong>Aralıkta değerlendirme</strong>$$
+\left[- \cos{\left(x \right)}\right]_{0}^{\pi}
+$$</li>
+<li><strong>Sonuç</strong>$$
+2
+$$</li></ol></section>
+<section><h2>20. Limit</h2><p class="question"><strong>Soru:</strong> limit of sin(x)/x as x->0<br><small>çözücü: <code>calculus</code></small></p><p class="result"><strong>Sonuç:</strong> $$1$$</p><ol class="steps"><li><strong>Fonksiyon</strong>$$
+\frac{\sin{\left(x \right)}}{x}
+$$</li>
+<li><strong>x -> 0 hedefi</strong>$$
+x \to 0
+$$</li>
+<li><strong>Limit hesabı</strong>$$
+1
+$$</li></ol></section>
+<section><h2>21. Limit</h2><p class="question"><strong>Soru:</strong> x->2 iken (x^2-4)/(x-2) limiti<br><small>çözücü: <code>calculus</code></small></p><p class="result"><strong>Sonuç:</strong> $$4$$</p><ol class="steps"><li><strong>Fonksiyon</strong>$$
+\frac{x^{2} - 4}{x - 2}
+$$</li>
+<li><strong>x -> 2 hedefi</strong>$$
+x \to 2
+$$</li>
+<li><strong>Limit hesabı</strong>$$
+4
+$$</li></ol></section>
+<section><h2>22. Limit</h2><p class="question"><strong>Soru:</strong> limit of (3*x + 1)/x as x->inf<br><small>çözücü: <code>calculus</code></small></p><p class="result"><strong>Sonuç:</strong> $$3$$</p><ol class="steps"><li><strong>Fonksiyon</strong>$$
+\frac{3 x + 1}{x}
+$$</li>
+<li><strong>x -> \infty hedefi</strong>$$
+x \to \infty
+$$</li>
+<li><strong>Limit hesabı</strong>$$
+3
+$$</li></ol></section>
+<section><h2>23. Limit</h2><p class="question"><strong>Soru:</strong> limit of 2^(1/x) as x->inf<br><small>çözücü: <code>calculus</code></small></p><p class="result"><strong>Sonuç:</strong> $$1$$</p><ol class="steps"><li><strong>Fonksiyon</strong>$$
+2^{\frac{1}{x}}
+$$</li>
+<li><strong>x -> \infty hedefi</strong>$$
+x \to \infty
+$$</li>
+<li><strong>Limit hesabı</strong>$$
+1
+$$</li></ol></section>
+<section><h2>24. Taylor serisi açılımı</h2><p class="question"><strong>Soru:</strong> taylor series of sin(x), 5 terms<br><small>çözücü: <code>calculus</code></small></p><p class="result"><strong>Sonuç:</strong> $$\frac{x^{9}}{362880} - \frac{x^{7}}{5040} + \frac{x^{5}}{120} - \frac{x^{3}}{6} + x$$</p><ol class="steps"><li><strong>Fonksiyon</strong><br><small>değişken: x</small>$$
+\sin{\left(x \right)}
+$$</li>
+<li><strong>Açılım merkezi ve terim sayısı</strong>$$
+x_0 = 0,\; \text{terim sayısı} = 5
+$$</li>
+<li><strong>Taylor serisi</strong>$$
+\frac{x^{9}}{362880} - \frac{x^{7}}{5040} + \frac{x^{5}}{120} - \frac{x^{3}}{6} + x
+$$</li></ol></section>
+<section><h2>25. Taylor serisi açılımı</h2><p class="question"><strong>Soru:</strong> taylor series of exp(x), 4 terms<br><small>çözücü: <code>calculus</code></small></p><p class="result"><strong>Sonuç:</strong> $$\frac{x^{3}}{6} + \frac{x^{2}}{2} + x + 1$$</p><ol class="steps"><li><strong>Fonksiyon</strong><br><small>değişken: x</small>$$
+e^{x}
+$$</li>
+<li><strong>Açılım merkezi ve terim sayısı</strong>$$
+x_0 = 0,\; \text{terim sayısı} = 4
+$$</li>
+<li><strong>Taylor serisi</strong>$$
+\frac{x^{3}}{6} + \frac{x^{2}}{2} + x + 1
+$$</li></ol></section>
+<section><h2>26. Determinant</h2><p class="question"><strong>Soru:</strong> [[1,2],[3,4]] matrisinin determinantı<br><small>çözücü: <code>linear_algebra</code></small></p><p class="result"><strong>Sonuç:</strong> $$-2$$</p><ol class="steps"><li><strong>Verilen matris</strong>$$
+\left[\begin{matrix}1 & 2\\3 & 4\end{matrix}\right]
+$$</li>
+<li><strong>Sarrus (2x2) formülü</strong>$$
+ad - bc = (1)(4) - (2)(3)
+$$</li>
+<li><strong>Sonuç</strong>$$
+-2
+$$</li></ol></section>
+<section><h2>27. Matris tersi</h2><p class="question"><strong>Soru:</strong> [[4,7],[2,6]] inverse<br><small>çözücü: <code>linear_algebra</code></small></p><p class="result"><strong>Sonuç:</strong> $$\left[\begin{matrix}\frac{3}{5} & - \frac{7}{10}\\- \frac{1}{5} & \frac{2}{5}\end{matrix}\right]$$</p><ol class="steps"><li><strong>Verilen matris</strong>$$
+\left[\begin{matrix}4 & 7\\2 & 6\end{matrix}\right]
+$$</li>
+<li><strong>Determinant kontrolü</strong>$$
+10
+$$</li>
+<li><strong>Sonuç</strong>$$
+\left[\begin{matrix}\frac{3}{5} & - \frac{7}{10}\\- \frac{1}{5} & \frac{2}{5}\end{matrix}\right]
+$$</li></ol></section>
+<section><h2>28. Özdeğer ve özvektörler</h2><p class="question"><strong>Soru:</strong> [[2,0],[0,3]] özdeğerleri ve özvektörleri<br><small>çözücü: <code>linear_algebra</code></small></p><p class="result"><strong>Sonuç:</strong> $$\text{özdeğerler}: \left\{ 2,\; 3 \right\}\quad \text{özvektörler}: \left\{ \left[\begin{matrix}1\\0\end{matrix}\right],\; \left[\begin{matrix}0\\1\end{matrix}\right] \right\}$$</p><ol class="steps"><li><strong>Verilen matris</strong>$$
+\left[\begin{matrix}2 & 0\\0 & 3\end{matrix}\right]
+$$</li>
+<li><strong>Karakteristik denklem kökleri (özdeğerler, katlarıyla)</strong>$$
+\left[ \left( 2, \  1\right), \  \left( 3, \  1\right)\right]
+$$</li>
+<li><strong>Özvektörler</strong>$$
+\left[ \left[\begin{matrix}1\\0\end{matrix}\right], \  \left[\begin{matrix}0\\1\end{matrix}\right]\right]
+$$</li>
+<li><strong>Sonuç</strong>$$
+\left\{ \mathtt{\text{özdeğerler}} : \left[ 2, \  3\right], \  \mathtt{\text{özvektörler}} : \left[ \left[\begin{matrix}1\\0\end{matrix}\right], \  \left[\begin{matrix}0\\1\end{matrix}\right]\right]\right\}
+$$</li></ol></section>
+<section><h2>29. Matris çarpımı</h2><p class="question"><strong>Soru:</strong> [[1,2],[3,4]] [[5,6],[7,8]] çarpımı<br><small>çözücü: <code>linear_algebra</code></small></p><p class="result"><strong>Sonuç:</strong> $$\left[\begin{matrix}19 & 22\\43 & 50\end{matrix}\right]$$</p><ol class="steps"><li><strong>Verilen matrisler</strong>$$
+\left[\begin{matrix}1 & 2\\3 & 4\end{matrix}\right] \quad \left[\begin{matrix}5 & 6\\7 & 8\end{matrix}\right]
+$$</li>
+<li><strong>Sonuç</strong>$$
+\left[\begin{matrix}19 & 22\\43 & 50\end{matrix}\right]
+$$</li></ol></section>
+<section><h2>30. Determinant</h2><p class="question"><strong>Soru:</strong> [[2,1],[1,3]] izi<br><small>çözücü: <code>linear_algebra</code></small></p><p class="result"><strong>Sonuç:</strong> $$5$$</p><ol class="steps"><li><strong>Verilen matris</strong>$$
+\left[\begin{matrix}2 & 1\\1 & 3\end{matrix}\right]
+$$</li>
+<li><strong>Sarrus (2x2) formülü</strong>$$
+ad - bc = (2)(3) - (1)(1)
+$$</li>
+<li><strong>Sonuç</strong>$$
+5
+$$</li></ol></section>
+<section><h2>31. Rank (kerte)</h2><p class="question"><strong>Soru:</strong> [[1,2],[2,4]] rank<br><small>çözücü: <code>linear_algebra</code></small></p><p class="result"><strong>Sonuç:</strong> $$1$$</p><ol class="steps"><li><strong>Verilen matris</strong>$$
+\left[\begin{matrix}1 & 2\\2 & 4\end{matrix}\right]
+$$</li>
+<li><strong>Sonuç</strong>$$
+1
+$$</li></ol></section>
+<section><h2>32. EBOB(48, 18) = 6</h2><p class="question"><strong>Soru:</strong> gcd(48, 18)<br><small>çözücü: <code>number_theory</code></small></p><p class="result"><strong>Sonuç:</strong> $$6$$</p><ol class="steps"><li><strong>Veriler</strong>$$
+\gcd(48, 18)
+$$</li>
+<li><strong>Öklid algoritması</strong>$$
+\gcd(48, 18) = \gcd(18, 12) = 6
+$$</li></ol></section>
+<section><h2>33. EKOK(4, 6) = 12</h2><p class="question"><strong>Soru:</strong> ekok(4, 6)<br><small>çözücü: <code>number_theory</code></small></p><p class="result"><strong>Sonuç:</strong> $$12$$</p><ol class="steps"><li><strong>Formül</strong>$$
+\operatorname{EKOK}(a, b) = \frac{|a \cdot b|}{\gcd(a, b)}
+$$</li>
+<li><strong>Hesap</strong>$$
+\frac{|4 \cdot 6|}{2} = 12
+$$</li></ol></section>
+<section><h2>34. 97 asal mı?</h2><p class="question"><strong>Soru:</strong> 97 asal mı?<br><small>çözücü: <code>number_theory</code></small></p><p class="result"><strong>Sonuç:</strong> $$97 asaldır.$$</p><ol class="steps"><li><strong>Test edilen sayı</strong>$$
+n = 97
+$$</li>
+<li><strong>Sonuç</strong>$$
+97 \text{ asaldır}
+$$</li></ol></section>
+<section><h2>35. 91 asal mı?</h2><p class="question"><strong>Soru:</strong> 91 asal mı?<br><small>çözücü: <code>number_theory</code></small></p><p class="result"><strong>Sonuç:</strong> $$91 asal değildir (çarpanları: 7 · 13).$$</p><ol class="steps"><li><strong>Test edilen sayı</strong>$$
+n = 91
+$$</li>
+<li><strong>Asal olmayan — çarpanları</strong>$$
+91 = 7 \cdot 13
+$$</li></ol></section>
+<section><h2>36. 360 sayısının asal çarpanları</h2><p class="question"><strong>Soru:</strong> 360 sayısını asal çarpanlarına ayır<br><small>çözücü: <code>number_theory</code></small></p><p class="result"><strong>Sonuç:</strong> $$360 = (2^{3}) \cdot (3^{2}) \cdot 5$$</p><ol class="steps"><li><strong>Sayı</strong>$$
+n = 360
+$$</li>
+<li><strong>Asal çarpanlar</strong>$$
+360 = (2^{3}) \cdot (3^{2}) \cdot 5
+$$</li></ol></section>
+<section><h2>37. 12 sayısının bölenleri</h2><p class="question"><strong>Soru:</strong> 12 sayısının bölenleri<br><small>çözücü: <code>number_theory</code></small></p><p class="result"><strong>Sonuç:</strong> $$\left[ 1, \  2, \  3, \  4, \  6, \  12\right]$$</p><ol class="steps"><li><strong>Sayı</strong>$$
+n = 12
+$$</li>
+<li><strong>Tüm bölenler</strong>$$
+\left[ 1, \  2, \  3, \  4, \  6, \  12\right]
+$$</li></ol></section>
+<section><h2>38. 7^3 mod 100 = 43</h2><p class="question"><strong>Soru:</strong> 7^3 mod 100<br><small>çözücü: <code>number_theory</code></small></p><p class="result"><strong>Sonuç:</strong> $$43$$</p><ol class="steps"><li><strong>Veriler</strong>$$
+7^{3} \bmod 100
+$$</li>
+<li><strong>Hesap</strong>$$
+7^{3} \bmod 100 = 43
+$$</li></ol></section>
+<section><h2>39. C(10, 3) = 120</h2><p class="question"><strong>Soru:</strong> C(10, 3)<br><small>çözücü: <code>number_theory</code></small></p><p class="result"><strong>Sonuç:</strong> $$120$$</p><ol class="steps"><li><strong>Veriler</strong>$$
+C(10, 3)
+$$</li>
+<li><strong>Formül</strong>$$
+C(n, k) = \frac{n!}{k!(n-k)!} = \frac{10!}{3!\cdot7!}
+$$</li>
+<li><strong>Hesap</strong>$$
+120
+$$</li></ol></section>
+<section><h2>40. P(5, 2) = 20</h2><p class="question"><strong>Soru:</strong> P(5, 2)<br><small>çözücü: <code>number_theory</code></small></p><p class="result"><strong>Sonuç:</strong> $$20$$</p><ol class="steps"><li><strong>Veriler</strong>$$
+P(5, 2)
+$$</li>
+<li><strong>Formül</strong>$$
+P(n, k) = \frac{n!}{(n-k)!} = \frac{5!}{3!}
+$$</li>
+<li><strong>Hesap</strong>$$
+20
+$$</li></ol></section>
+<section><h2>41. Ortalama = 3</h2><p class="question"><strong>Soru:</strong> ortalama [1, 2, 3, 4, 5]<br><small>çözücü: <code>statistics</code></small></p><p class="result"><strong>Sonuç:</strong> $$3$$</p><ol class="steps"><li><strong>Veri seti</strong><br><small>n = 5</small>$$
+\left[ 1.0, \  2.0, \  3.0, \  4.0, \  5.0\right]
+$$</li>
+<li><strong>Toplam</strong>$$
+1 + 2 + 3 + 4 + 5 = 15
+$$</li>
+<li><strong>Formül</strong>$$
+\bar{x} = \frac{\sum x_i}{n} = \frac{15}{5}
+$$</li>
+<li><strong>Sonuç</strong>$$
+3.0
+$$</li></ol></section>
+<section><h2>42. Medyan = 2.5</h2><p class="question"><strong>Soru:</strong> medyan [1, 2, 3, 100]<br><small>çözücü: <code>statistics</code></small></p><p class="result"><strong>Sonuç:</strong> $$2.5$$</p><ol class="steps"><li><strong>Veri seti</strong><br><small>n = 4</small>$$
+\left[ 1.0, \  2.0, \  3.0, \  100.0\right]
+$$</li>
+<li><strong>Sıralama</strong>$$
+\left[ 1.0, \  2.0, \  3.0, \  100.0\right]
+$$</li>
+<li><strong>Sonuç</strong>$$
+2.5
+$$</li></ol></section>
+<section><h2>43. Varyans = 4.57143</h2><p class="question"><strong>Soru:</strong> varyans [2, 4, 4, 4, 5, 5, 7, 9]<br><small>çözücü: <code>statistics</code></small></p><p class="result"><strong>Sonuç:</strong> $$4.57143$$</p><ol class="steps"><li><strong>Veri seti</strong><br><small>n = 8</small>$$
+\left[ 2.0, \  4.0, \  4.0, \  4.0, \  5.0, \  5.0, \  7.0, \  9.0\right]
+$$</li>
+<li><strong>Formül</strong>$$
+s^2 = \frac{\sum (x_i - \bar{x})^2}{n - 1}
+$$</li>
+<li><strong>Sonuç</strong>$$
+4.57142857142857
+$$</li></ol></section>
+<section><h2>44. Standart sapma = 2.13809</h2><p class="question"><strong>Soru:</strong> standart sapma [2, 4, 4, 4, 5, 5, 7, 9]<br><small>çözücü: <code>statistics</code></small></p><p class="result"><strong>Sonuç:</strong> $$2.13809$$</p><ol class="steps"><li><strong>Veri seti</strong><br><small>n = 8</small>$$
+\left[ 2.0, \  4.0, \  4.0, \  4.0, \  5.0, \  5.0, \  7.0, \  9.0\right]
+$$</li>
+<li><strong>Ortalama (önce gerekiyor)</strong>$$
+5.0
+$$</li>
+<li><strong>Formül</strong>$$
+s = \sqrt{\frac{\sum (x_i - \bar{x})^2}{n - 1}}
+$$</li>
+<li><strong>Sonuç</strong>$$
+2.1380899352994
+$$</li></ol></section>
+<section><h2>45. Mod = [3.0]</h2><p class="question"><strong>Soru:</strong> modu [1, 2, 2, 3, 3, 3]<br><small>çözücü: <code>statistics</code></small></p><p class="result"><strong>Sonuç:</strong> $$[3]$$</p><ol class="steps"><li><strong>Veri seti</strong><br><small>n = 6</small>$$
+\left[ 1.0, \  2.0, \  2.0, \  3.0, \  3.0, \  3.0\right]
+$$</li>
+<li><strong>En sık tekrar eden değerler</strong>$$
+\left[ 3.0\right]
+$$</li>
+<li><strong>Sonuç</strong>$$
+\left[ 3.0\right]
+$$</li></ol></section>
+<section><h2>46. Toplam = 100</h2><p class="question"><strong>Soru:</strong> toplam [10, 20, 30, 40]<br><small>çözücü: <code>statistics</code></small></p><p class="result"><strong>Sonuç:</strong> $$100$$</p><ol class="steps"><li><strong>Veri seti</strong><br><small>n = 4</small>$$
+\left[ 10.0, \  20.0, \  30.0, \  40.0\right]
+$$</li>
+<li><strong>Toplama</strong>$$
+10 + 20 + 30 + 40
+$$</li>
+<li><strong>Sonuç</strong>$$
+100.0
+$$</li></ol></section>
+<section><h2>47. En büyük = 9</h2><p class="question"><strong>Soru:</strong> en büyük değer [3, 9, 2]<br><small>çözücü: <code>statistics</code></small></p><p class="result"><strong>Sonuç:</strong> $$9$$</p><ol class="steps"><li><strong>Veri seti</strong><br><small>n = 3</small>$$
+\left[ 3.0, \  9.0, \  2.0\right]
+$$</li>
+<li><strong>Sonuç</strong>$$
+9.0
+$$</li></ol></section>
+<footer>47 soru — 2026-11-20</footer>
+</body>
+</html>

@@ -1,0 +1,527 @@
+MathPad Demo Defteri
+====================
+
+1) Aritmetik işlem  [soruyu çözen: arithmetic]
+   Soru : (2+3)*4 - 7/2
+   Sonuç: 33/2
+   1. Verilen işlem
+        33/2
+   2. Sonuç
+        33/2
+
+2) Aritmetik işlem  [soruyu çözen: arithmetic]
+   Soru : 2^10 + sqrt(144)
+   Sonuç: 1036
+   1. Verilen işlem
+        1036
+   2. Sonuç
+        1036
+
+3) Aritmetik işlem  [soruyu çözen: arithmetic]
+   Soru : sqrt(2)*sqrt(8)
+   Sonuç: 4
+   1. Verilen işlem
+        4
+   2. Sonuç
+        4
+
+4) Faktöriyel: 5!  [soruyu çözen: arithmetic]
+   Soru : 5!
+   Sonuç: 120
+   1. Faktöriyel tanımı
+        5! = 1 \cdot 2 \cdots 5
+   2. Hesap
+        120
+
+5) Yüzde hesabı: 250 sayısının %15'i  [soruyu çözen: arithmetic]
+   Soru : 250'nin %15'i
+   Sonuç: 75/2
+   1. Sorunun okunuşu
+        \%15 \text{ oranı, } 250 \text{ tabanı ile}
+   2. Yüzde formülü
+        \frac{250 \cdot 15}{100}
+   3. Sonuç
+        75/2
+
+6) Yüzde hesabı: 80 sayısının %15'i  [soruyu çözen: arithmetic]
+   Soru : 15% of 80
+   Sonuç: 12
+   1. Sorunun okunuşu
+        \%15 \text{ oranı, } 80 \text{ tabanı ile}
+   2. Yüzde formülü
+        \frac{80 \cdot 15}{100}
+   3. Sonuç
+        12
+
+7) Denklem çözümü  [soruyu çözen: algebra]
+   Soru : 3*x + 4 = 10 denklemini çöz
+   Sonuç: [{x: 2}]
+   1. Denklemler
+        3 x + 4 = 10
+   2. Çözüm kümesi
+        {x: 2}
+
+8) Denklem çözümü  [soruyu çözen: algebra]
+   Soru : x^2 - 3x + 2 = 0
+   Sonuç: [{x: 1}, {x: 2}]
+   1. Denklemler
+        x^{2} - 3 x + 2 = 0
+   2. Standard biçim
+        x^{2} - 3 x + 2 = 0
+   3. Diskriminant
+        \Delta = b^2 - 4ac = 1
+   4. Yorum
+        \Delta > 0 \Rightarrow \text{iki farklı gerçek kök}
+   5. Çözüm kümesi
+        [{x: 1}, {x: 2}]
+
+9) Denklem çözümü  [soruyu çözen: algebra]
+   Soru : x^2 + 1 = 0 (karmaşık kökler)
+   Sonuç: [{x: -ⅈ}, {x: ⅈ}]
+   1. Denklemler
+        x^{2} + 1 = 0
+   2. Standard biçim
+        x^{2} + 1 = 0
+   3. Diskriminant
+        \Delta = b^2 - 4ac = -4
+   4. Yorum
+        \Delta < 0 \Rightarrow \text{gerçek kök yok, karmaşık kökler var}
+   5. Çözüm kümesi
+        [{x: -ⅈ}, {x: ⅈ}]
+
+10) Denklem çözümü  [soruyu çözen: algebra]
+   Soru : x + y = 5, x - y = 1
+   Sonuç: [{x: 3, y: 2}]
+   1. Denklemler
+        x + y = 5 \quad;\quad x - y = 1
+   2. Çözüm kümesi
+        {x: 3, y: 2}
+
+11) Çarpanlara ayırma  [soruyu çözen: algebra]
+   Soru : x^2 - 5x + 6 çarpanlarına ayır
+   Sonuç: (x - 3)⋅(x - 2)
+   1. Verilen ifade
+         2          
+        x  - 5⋅x + 6
+   2. Çarpanlara ayırma
+        (x - 3)⋅(x - 2)
+
+12) İfadeyi açma  [soruyu çözen: algebra]
+   Soru : (x + 2)*(x + 3) expand
+   Sonuç:  2          
+x  + 5⋅x + 6
+   1. Verilen ifade
+        (x + 2)⋅(x + 3)
+   2. Parantezleri açma (expand)
+         2          
+        x  + 5⋅x + 6
+
+13) Basitleştirme  [soruyu çözen: algebra]
+   Soru : simplify (x^2 - 1)/(x - 1)
+   Sonuç: x + 1
+   1. Verilen ifade
+         2    
+        x  - 1
+        ──────
+        x - 1 
+   2. Basitleştirme
+        x + 1
+
+14) Türev  [soruyu çözen: calculus]
+   Soru : x^3 + 2*x fonksiyonunun türevi
+   Sonuç:    2    
+3⋅x  + 2
+   1. Fonksiyon
+         3      
+        x  + 2⋅x
+   2. Türev işlemi
+        \frac{d}{dx}\left[x^{3} + 2 x\right]
+   3. Sonuç
+           2    
+        3⋅x  + 2
+
+15) Türev  [soruyu çözen: calculus]
+   Soru : d/dx sin(x)*exp(x)
+   Sonuç:  x           x       
+ℯ ⋅sin(x) + ℯ ⋅cos(x)
+   1. Fonksiyon
+         x       
+        ℯ ⋅sin(x)
+   2. Türev işlemi
+        \frac{d}{dx}\left[e^{x} \sin{\left(x \right)}\right]
+   3. Sonuç
+         x           x       
+        ℯ ⋅sin(x) + ℯ ⋅cos(x)
+
+16) 2. mertebeden türev  [soruyu çözen: calculus]
+   Soru : x^4 ikinci türev
+   Sonuç:     2
+12⋅x 
+   1. Fonksiyon
+         4
+        x 
+   2. 2. mertebeden türev isteniyor
+        \frac{d^2}{dx^2}
+   3. Türev işlemi
+        \frac{d}{dx}\left[x^{4}\right]
+   4. Sonuç
+            2
+        12⋅x 
+
+17) Belirsiz integral  [soruyu çözen: calculus]
+   Soru : integral of x^2 dx
+   Sonuç:  3
+x 
+──
+3 
+   1. Fonksiyon
+         2
+        x 
+   2. Sonuç
+         3
+        x 
+        ──
+        3 
+
+18) Belirli integral  [soruyu çözen: calculus]
+   Soru : integral of x^2 from 0 to 3
+   Sonuç: 9
+   1. Fonksiyon
+         2
+        x 
+   2. Belirli integral aralığı
+        \int_{0}^{3}
+   3. Belirsiz integral (antitürev)
+         3
+        x 
+        ──
+        3 
+   4. Aralıkta değerlendirme
+        \left[\frac{x^{3}}{3}\right]_{0}^{3}
+   5. Sonuç
+        9
+
+19) Belirli integral  [soruyu çözen: calculus]
+   Soru : sin(x) fonksiyonunun 0 dan pi ye integrali
+   Sonuç: 2
+   1. Fonksiyon
+        sin(x)
+   2. Belirli integral aralığı
+        \int_{0}^{\pi}
+   3. Belirsiz integral (antitürev)
+        -cos(x)
+   4. Aralıkta değerlendirme
+        \left[- \cos{\left(x \right)}\right]_{0}^{\pi}
+   5. Sonuç
+        2
+
+20) Limit  [soruyu çözen: calculus]
+   Soru : limit of sin(x)/x as x->0
+   Sonuç: 1
+   1. Fonksiyon
+        sin(x)
+        ──────
+          x   
+   2. x -> 0 hedefi
+        x \to 0
+   3. Limit hesabı
+        1
+
+21) Limit  [soruyu çözen: calculus]
+   Soru : x->2 iken (x^2-4)/(x-2) limiti
+   Sonuç: 4
+   1. Fonksiyon
+         2    
+        x  - 4
+        ──────
+        x - 2 
+   2. x -> 2 hedefi
+        x \to 2
+   3. Limit hesabı
+        4
+
+22) Limit  [soruyu çözen: calculus]
+   Soru : limit of (3*x + 1)/x as x->inf
+   Sonuç: 3
+   1. Fonksiyon
+        3⋅x + 1
+        ───────
+           x   
+   2. x -> \infty hedefi
+        x \to \infty
+   3. Limit hesabı
+        3
+
+23) Limit  [soruyu çözen: calculus]
+   Soru : limit of 2^(1/x) as x->inf
+   Sonuç: 1
+   1. Fonksiyon
+        x ___
+        ╲╱ 2 
+   2. x -> \infty hedefi
+        x \to \infty
+   3. Limit hesabı
+        1
+
+24) Taylor serisi açılımı  [soruyu çözen: calculus]
+   Soru : taylor series of sin(x), 5 terms
+   Sonuç:    9       7     5     3    
+  x       x     x     x     
+────── - ──── + ─── - ── + x
+362880   5040   120   6     
+   1. Fonksiyon
+        sin(x)
+   2. Açılım merkezi ve terim sayısı
+        x_0 = 0,\; \text{terim sayısı} = 5
+   3. Taylor serisi
+           9       7     5     3    
+          x       x     x     x     
+        ────── - ──── + ─── - ── + x
+        362880   5040   120   6     
+
+25) Taylor serisi açılımı  [soruyu çözen: calculus]
+   Soru : taylor series of exp(x), 4 terms
+   Sonuç:  3    2        
+x    x         
+── + ── + x + 1
+6    2         
+   1. Fonksiyon
+         x
+        ℯ 
+   2. Açılım merkezi ve terim sayısı
+        x_0 = 0,\; \text{terim sayısı} = 4
+   3. Taylor serisi
+         3    2        
+        x    x         
+        ── + ── + x + 1
+        6    2         
+
+26) Determinant  [soruyu çözen: linear_algebra]
+   Soru : [[1,2],[3,4]] matrisinin determinantı
+   Sonuç: -2
+   1. Verilen matris
+        ⎡1  2⎤
+        ⎢    ⎥
+        ⎣3  4⎦
+   2. Sarrus (2x2) formülü
+        ad - bc = (1)(4) - (2)(3)
+   3. Sonuç
+        -2
+
+27) Matris tersi  [soruyu çözen: linear_algebra]
+   Soru : [[4,7],[2,6]] inverse
+   Sonuç: ⎡3/5   -7/10⎤
+⎢           ⎥
+⎣-1/5   2/5 ⎦
+   1. Verilen matris
+        ⎡4  7⎤
+        ⎢    ⎥
+        ⎣2  6⎦
+   2. Determinant kontrolü
+        10
+   3. Sonuç
+        ⎡3/5   -7/10⎤
+        ⎢           ⎥
+        ⎣-1/5   2/5 ⎦
+
+28) Özdeğer ve özvektörler  [soruyu çözen: linear_algebra]
+   Soru : [[2,0],[0,3]] özdeğerleri ve özvektörleri
+   Sonuç: ⎧                                 ⎡⎡1⎤  ⎡0⎤⎤⎫
+⎨özdeğerler: [2, 3], özvektörler: ⎢⎢ ⎥, ⎢ ⎥⎥⎬
+⎩                                 ⎣⎣0⎦  ⎣1⎦⎦⎭
+   1. Verilen matris
+        ⎡2  0⎤
+        ⎢    ⎥
+        ⎣0  3⎦
+   2. Karakteristik denklem kökleri (özdeğerler, katlarıyla)
+        [(2, 1), (3, 1)]
+   3. Özvektörler
+        ⎡⎡1⎤  ⎡0⎤⎤
+        ⎢⎢ ⎥, ⎢ ⎥⎥
+        ⎣⎣0⎦  ⎣1⎦⎦
+   4. Sonuç
+        ⎧                                 ⎡⎡1⎤  ⎡0⎤⎤⎫
+        ⎨özdeğerler: [2, 3], özvektörler: ⎢⎢ ⎥, ⎢ ⎥⎥⎬
+        ⎩                                 ⎣⎣0⎦  ⎣1⎦⎦⎭
+
+29) Matris çarpımı  [soruyu çözen: linear_algebra]
+   Soru : [[1,2],[3,4]] [[5,6],[7,8]] çarpımı
+   Sonuç: ⎡19  22⎤
+⎢      ⎥
+⎣43  50⎦
+   1. Verilen matrisler
+        \left[\begin{matrix}1 & 2\\3 & 4\end{matrix}\right] \quad \left[\begin{matrix}5 & 6\\7 & 8\end{matrix}\right]
+   2. Sonuç
+        ⎡19  22⎤
+        ⎢      ⎥
+        ⎣43  50⎦
+
+30) Determinant  [soruyu çözen: linear_algebra]
+   Soru : [[2,1],[1,3]] izi
+   Sonuç: 5
+   1. Verilen matris
+        ⎡2  1⎤
+        ⎢    ⎥
+        ⎣1  3⎦
+   2. Sarrus (2x2) formülü
+        ad - bc = (2)(3) - (1)(1)
+   3. Sonuç
+        5
+
+31) Rank (kerte)  [soruyu çözen: linear_algebra]
+   Soru : [[1,2],[2,4]] rank
+   Sonuç: 1
+   1. Verilen matris
+        ⎡1  2⎤
+        ⎢    ⎥
+        ⎣2  4⎦
+   2. Sonuç
+        1
+
+32) EBOB(48, 18) = 6  [soruyu çözen: number_theory]
+   Soru : gcd(48, 18)
+   Sonuç: 6
+   1. Veriler
+        \gcd(48, 18)
+   2. Öklid algoritması
+        \gcd(48, 18) = \gcd(18, 12) = 6
+
+33) EKOK(4, 6) = 12  [soruyu çözen: number_theory]
+   Soru : ekok(4, 6)
+   Sonuç: 12
+   1. Formül
+        \operatorname{EKOK}(a, b) = \frac{|a \cdot b|}{\gcd(a, b)}
+   2. Hesap
+        \frac{|4 \cdot 6|}{2} = 12
+
+34) 97 asal mı?  [soruyu çözen: number_theory]
+   Soru : 97 asal mı?
+   Sonuç: 97 asaldır.
+   1. Test edilen sayı
+        n = 97
+   2. Sonuç
+        97 \text{ asaldır}
+
+35) 91 asal mı?  [soruyu çözen: number_theory]
+   Soru : 91 asal mı?
+   Sonuç: 91 asal değildir (çarpanları: 7 · 13).
+   1. Test edilen sayı
+        n = 91
+   2. Asal olmayan — çarpanları
+        91 = 7 \cdot 13
+
+36) 360 sayısının asal çarpanları  [soruyu çözen: number_theory]
+   Soru : 360 sayısını asal çarpanlarına ayır
+   Sonuç: 2^3 · 3^2 · 5
+   1. Sayı
+        n = 360
+   2. Asal çarpanlar
+        360 = (2^{3}) \cdot (3^{2}) \cdot 5
+
+37) 12 sayısının bölenleri  [soruyu çözen: number_theory]
+   Soru : 12 sayısının bölenleri
+   Sonuç: [1, 2, 3, 4, 6, 12]
+   1. Sayı
+        n = 12
+   2. Tüm bölenler
+        [1, 2, 3, 4, 6, 12]
+
+38) 7^3 mod 100 = 43  [soruyu çözen: number_theory]
+   Soru : 7^3 mod 100
+   Sonuç: 43
+   1. Veriler
+        7^{3} \bmod 100
+   2. Hesap
+        7^{3} \bmod 100 = 43
+
+39) C(10, 3) = 120  [soruyu çözen: number_theory]
+   Soru : C(10, 3)
+   Sonuç: 120
+   1. Veriler
+        C(10, 3)
+   2. Formül
+        C(n, k) = \frac{n!}{k!(n-k)!} = \frac{10!}{3!\cdot7!}
+   3. Hesap
+        120
+
+40) P(5, 2) = 20  [soruyu çözen: number_theory]
+   Soru : P(5, 2)
+   Sonuç: 20
+   1. Veriler
+        P(5, 2)
+   2. Formül
+        P(n, k) = \frac{n!}{(n-k)!} = \frac{5!}{3!}
+   3. Hesap
+        20
+
+41) Ortalama = 3  [soruyu çözen: statistics]
+   Soru : ortalama [1, 2, 3, 4, 5]
+   Sonuç: 3
+   1. Veri seti
+        [1.0, 2.0, 3.0, 4.0, 5.0]
+   2. Toplam
+        1 + 2 + 3 + 4 + 5 = 15
+   3. Formül
+        \bar{x} = \frac{\sum x_i}{n} = \frac{15}{5}
+   4. Sonuç
+        3.00000000000000
+
+42) Medyan = 2.5  [soruyu çözen: statistics]
+   Soru : medyan [1, 2, 3, 100]
+   Sonuç: 2.5
+   1. Veri seti
+        [1.0, 2.0, 3.0, 100.0]
+   2. Sıralama
+        [1.0, 2.0, 3.0, 100.0]
+   3. Sonuç
+        2.50000000000000
+
+43) Varyans = 4.57143  [soruyu çözen: statistics]
+   Soru : varyans [2, 4, 4, 4, 5, 5, 7, 9]
+   Sonuç: 4.57143
+   1. Veri seti
+        [2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0]
+   2. Formül
+        s^2 = \frac{\sum (x_i - \bar{x})^2}{n - 1}
+   3. Sonuç
+        4.57142857142857
+
+44) Standart sapma = 2.13809  [soruyu çözen: statistics]
+   Soru : standart sapma [2, 4, 4, 4, 5, 5, 7, 9]
+   Sonuç: 2.13809
+   1. Veri seti
+        [2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0]
+   2. Ortalama (önce gerekiyor)
+        5.00000000000000
+   3. Formül
+        s = \sqrt{\frac{\sum (x_i - \bar{x})^2}{n - 1}}
+   4. Sonuç
+        2.13808993529940
+
+45) Mod = [3.0]  [soruyu çözen: statistics]
+   Soru : modu [1, 2, 2, 3, 3, 3]
+   Sonuç: [3]
+   1. Veri seti
+        [1.0, 2.0, 2.0, 3.0, 3.0, 3.0]
+   2. En sık tekrar eden değerler
+        [3.0]
+   3. Sonuç
+        [3.0]
+
+46) Toplam = 100  [soruyu çözen: statistics]
+   Soru : toplam [10, 20, 30, 40]
+   Sonuç: 100
+   1. Veri seti
+        [10.0, 20.0, 30.0, 40.0]
+   2. Toplama
+        10 + 20 + 30 + 40
+   3. Sonuç
+        100.000000000000
+
+47) En büyük = 9  [soruyu çözen: statistics]
+   Soru : en büyük değer [3, 9, 2]
+   Sonuç: 9
+   1. Veri seti
+        [3.0, 9.0, 2.0]
+   2. Sonuç
+        9.00000000000000
