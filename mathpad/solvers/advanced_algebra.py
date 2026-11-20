@@ -20,7 +20,7 @@ from .base import Solution, Solver, Step
 
 _INEQ_RE = re.compile(r"<=|>=|≤|≥|<(?!=)|>(?![=>])")
 _PIPES_RE = re.compile(r"\|([^|]+)\|")
-_LOG_EQ_RE = re.compile(r"log_?\{?(\d+)\}?\s*\(([^()]+)\)\s*=\s*(-?[\w.]+)")
+_LOG_EQ_RE = re.compile(r"log_?\{?(\d+)\}?\s*\(([^()]+)\)\s*=\s*(.+)")
 _LOG_EVAL_RE = re.compile(r"([+\-]?)\s*log_?\{?(\d+)\}?\s*\(?\s*(-?\d+(?:\.\d+)?)\s*\)?")
 _ASSIGN_RE = re.compile(r"([abqds])\s*_?\s*(\d*)\s*=\s*(-?\d+(?:\.\d+)?)")
 _WANTED_RE = re.compile(r"([sb])\s*_?\s*(\d+)\s*=\s*\?")
@@ -227,6 +227,10 @@ class AdvancedAlgebraSolver(Solver):
                               latex=", ".join(rf"{_L(var)} \neq {_L(c)}" for c in denom_roots),
                               detail="0'a bölme olmadığı için bu noktalar çözüme girmez"))
         steps.append(Step("İşaret analizi", latex=r", \quad ".join(sign_rows)))
+        if answer_set is sp.EmptySet:
+            steps.append(Step("Çözüm yok",
+                              latex="\\varnothing",
+                              detail="ifade hiçbir aralıkta istenen koşulu sağlamıyor"))
         if included_points:
             steps.append(Step("Sınır noktaları dahil",
                               latex=r", \quad ".join(rf"{_L(var)} = {_L(c)}" for c in included_points),
@@ -259,7 +263,7 @@ class AdvancedAlgebraSolver(Solver):
     @staticmethod
     def _assemble_set(intervals_in, included_points):
         if not intervals_in and not included_points:
-            return sp.EmptySet()
+            return sp.EmptySet
         if intervals_in and not included_points:
             return intervals_in[0] if len(intervals_in) == 1 else sp.Union(*intervals_in)
         pieces = list(intervals_in) + [sp.FiniteSet(c) for c in included_points]
@@ -288,7 +292,10 @@ class AdvancedAlgebraSolver(Solver):
         if rhs < 0:
             steps.append(Step("Negatif mutlak değer",
                               latex=r"|A| = c,\; c < 0 \Rightarrow \varnothing"))
-            return self._solution(question, sp.EmptySet(), steps, "Mutlak değer denklemi")
+            steps.append(Step("Çözüm yok",
+                              latex="\varnothing",
+                              detail=f"{_L(sp.Abs(inner))} hiçbir zaman negatif olamaz"))
+            return self._solution(question, sp.EmptySet, steps, "Mutlak değer denklemi")
         steps.append(Step("Mutlak değerin tanımı",
                           latex=rf"\left|{_L(inner)}\right| = {_L(rhs)} \Rightarrow {_L(inner)} = {_L(rhs)} \;\text{{veya}}\; {_L(inner)} = -({_L(rhs)})"))
         roots = []
@@ -312,9 +319,11 @@ class AdvancedAlgebraSolver(Solver):
         match = _LOG_EQ_RE.search(question)
         if not match:
             return None
-        arg = try_sympify(match.group(2))
-        rhs = try_sympify(match.group(3))
-        if arg is None or rhs is None or not arg.free_symbols or rhs.free_symbols:
+        arg = try_sympify(_strip_words(match.group(2)))
+        rhs = try_sympify(_strip_words(match.group(3).strip()))
+        if arg is None or rhs is None or not arg.free_symbols:
+            return None
+        if not rhs.free_symbols and not rhs.is_number:
             return None
         return {"base": int(match.group(1)), "arg": arg, "rhs": rhs}
 
@@ -326,7 +335,11 @@ class AdvancedAlgebraSolver(Solver):
         target = base**rhs
         steps.append(Step("Logaritmanın tanımı",
                           latex=rf"\log_{{ {_L(base)} }}({_L(arg)}) = {_L(rhs)} \Leftrightarrow {_L(arg)} = {_L(base)}^{{ {_L(rhs)} }}"))
-        if target.is_number and rhs != 1:
+        if rhs.free_symbols:
+            steps.append(Step("Üstel biçime geç",
+                              latex=rf"{_L(var)} = {_L(base)}^{{ {_L(rhs)} }}",
+                              detail="her iki taraf üstel biçimde yazılır ve kökler hesaplanır"))
+        elif target.is_number and rhs != 1:
             steps.append(Step("Sağ tarafın değeri",
                               latex=rf"{_L(base)}^{{ {_L(rhs)} }} = {_L(target)}"))
         results = sp.solve(sp.Eq(arg, target), var, dict=True)
@@ -338,13 +351,52 @@ class AdvancedAlgebraSolver(Solver):
                 steps.append(Step("Geçersiz kök elenir",
                                   latex=rf"{_L(arg.subs(sol))} < 0",
                                   detail="logaritmanın argümanı pozitif olmalıdır"))
+        if rhs.free_symbols and any(
+            "LambertW" in str(sol.get(var, ""))
+            for sol in valid
+        ):
+            steps.append(Step("Kapalı biçim LambertW veriyor",
+                              latex="; ".join(rf"{_L(var)} = {_L(sol.get(var))}" for sol in valid),
+                              detail="okul düzeyinde sayısal kökler daha okunaklıdır"))
+            valid = [{var: root} for root in self._numeric_log_roots(arg - target, var)]
+            steps.append(Step("Sayısal çözüm",
+                              detail="kökler sayısal yöntemle bulunur",
+                              latex=", ".join(rf"{_L(var)} \approx {_L(sp.N(r, 6))}" for r in
+                                              (sol.get(var) for sol in valid))))
+        if not valid:
+            numeric = self._numeric_log_roots(arg - target, var)
+            for root in numeric:
+                valid.append({var: root})
+            if numeric:
+                steps.append(Step("Sayısal çözüm",
+                                  detail="kapalı analitik biçim yok; kökler sayısal bulunur",
+                                  latex=", ".join(rf"{_L(var)} \approx {_L(sp.N(r, 6))}" for r in numeric)))
         for sol in valid:
             steps.append(Step("Kök kontrolü",
                               latex=rf"{_L(arg.subs(sol))} > 0 \;\checkmark"))
         if valid:
             steps.append(Step("Çözüm",
-                              latex="; ".join(rf"{_L(sym)} = {_L(val)}" for sym, val in valid[0].items())))
+                              latex="; ".join(rf"{_L(sym)} = {_L(val)}" for sol in valid for sym, val in sol.items())))
         return self._solution(question, valid, steps, "Logaritmik denklem")
+
+    @staticmethod
+    def _numeric_log_roots(expr, var):
+        roots = []
+        try:
+            func = sp.lambdify(var, expr, "math")
+            for guess in (0.05, 0.2, 0.5, 1.0, 2.0, 4.0, 6.0, 8.0, 12.0, 20.0):
+                try:
+                    root = sp.nsolve(expr, var, guess, tol=1e-14, maxsteps=60)
+                except (ValueError, ZeroDivisionError, TypeError, RuntimeError):
+                    continue
+                root_val = float(root)
+                if root_val <= 0:
+                    continue
+                if all(abs(root_val - float(r)) > 1e-8 for r in roots):
+                    roots.append(root)
+        except Exception:  # noqa: BLE001
+            return []
+        return roots
 
     def _log_eval_data(self, question: str):
         clause = _strip_words(normalize(question))

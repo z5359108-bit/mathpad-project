@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import re
 
 import sympy as sp
@@ -78,11 +79,24 @@ def _insert_implicit_multiplication(text: str) -> str:
     return text
 
 
+_FUNC_POW_RE = re.compile(
+    r"\b(sin|cos|tan|cot|sec|csc|ln|log|exp|sinh|cosh|tanh)"
+    r"\^\s*(-?\d+)\s*\(([^()]*)\)",
+    re.IGNORECASE,
+)
+
+
+def _rewrite_func_powers(text: str) -> str:
+    """'sin^2(x)' -> 'sin(x)^2' (defter notasyonu)."""
+    return _FUNC_POW_RE.sub(r"\1(\3)^\2", text)
+
+
 def try_sympify(text: str, locals_: dict | None = None) -> sp.Basic | None:
     """Metni sympy ifadesine çevirmeyi dene; başarısızsa None döndür."""
     cleaned = normalize(text).strip().strip(",. ")
     if not cleaned or cleaned.startswith("["):
         return None
+    cleaned = _rewrite_func_powers(cleaned)
     cleaned = _insert_implicit_multiplication(cleaned)
     local = {"sqrt": sp.sqrt, "pi": sp.pi, "oo": sp.oo, "E": sp.E, "e": sp.E, "abs": sp.Abs,
              "sin": sp.sin, "cos": sp.cos, "tan": sp.tan, "log": sp.log, "exp": sp.exp,
@@ -153,8 +167,8 @@ def parse_matrix(text: str) -> sp.Matrix | None:
         return None
     raw = match.group(0).replace(";", ",")
     try:
-        rows = eval(raw, {"__builtins__": {}}, {})  # noqa: S307 - girdi regex ile doğrulandı
-    except (SyntaxError, ValueError):
+        rows = ast.literal_eval(raw)
+    except (SyntaxError, ValueError, TypeError):
         return None
     try:
         return sp.Matrix(rows)

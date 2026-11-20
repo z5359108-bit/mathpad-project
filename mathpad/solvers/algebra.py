@@ -54,7 +54,7 @@ class AlgebraSolver(Solver):
 
     _OTHER_DOMAIN = re.compile(
         r"t\u00fcrev|turev|derivative|d/dx|integral|limit|hosylay|onumi|\u00f6n\u00fcmi"
-        r"|te[gğ]et|tangent|ekstremum|extremum|meydan|alan|area"
+        r"|te[gğ]et|tangent|ekstremum|extremum|meydan|alan|area|differensial"
     )
 
     def can_handle(self, question: str) -> float:
@@ -172,6 +172,8 @@ class AlgebraSolver(Solver):
                 pass
 
         results = sp.solve(equations, symbols, dict=True)
+        if len(equations) == 1 and results:
+            self._append_trig_periodicity(steps, equations[0], symbols[0], results)
         if not results:
             steps.append(Step("Sonuç", latex="\\varnothing"))
             return self._solution(question, "∅ (gerçek sayılarda çözüm yok)", steps, "Denklem çözümü (çözüm yok)")
@@ -179,3 +181,29 @@ class AlgebraSolver(Solver):
         solution = results[0] if len(results) == 1 else results
         steps.append(Step("Çözüm kümesi", content=solution))
         return self._solution(question, results, steps, "Denklem çözümü")
+
+    @staticmethod
+    def _append_trig_periodicity(steps, equation, var, results) -> None:
+        body = equation.lhs - equation.rhs
+        has_tan = bool(body.atoms(sp.tan, sp.cot))
+        has_cos = bool(body.atoms(sp.cos))
+        has_sin = bool(body.atoms(sp.sin))
+        if not (has_tan or has_cos or has_sin):
+            return
+        branches: list[str] = []
+        for sol in results:
+            val = sol.get(var)
+            if val is None:
+                return
+            if has_tan:
+                branches.append(rf"{to_latex(var)} = {to_latex(val)} + k\pi")
+            elif has_cos:
+                branches.append(rf"{to_latex(var)} = \pm {to_latex(val)} + 2k\pi")
+            else:
+                branches.append(rf"{to_latex(var)} = {to_latex(val)} + 2k\pi")
+                branches.append(rf"{to_latex(var)} = -{to_latex(val)} + 2k\pi")
+        steps.append(Step(
+            "Genel çözüm (periyodiklik)",
+            latex=r" \quad ".join(branches) + r", \quad k \in \mathbb{Z}",
+            detail="trigonometrik denklemin sonsuz sayıda çözümü vardır; ana çözüm periyot katlarıyla tekrarlanır",
+        ))

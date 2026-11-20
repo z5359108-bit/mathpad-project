@@ -96,12 +96,18 @@ class AdvancedAnalysisSolver(Solver):
             return 0.9
         if re.search(r"ekstremum|extremum|kritik nokta|max\s*ve\s*min\s*nokta", q):
             return 0.9
-        if re.search(r"en\s+b[üu]y[üu]k|en\s+k[üu][cç][üu]k|maximum|minimum", q) \
-                and re.search(r"aral[ıi][ğg]|interval", q) \
-                and _INTERVAL_RE.search(q):
+        if ((re.search(r"en\s+b[üu]y[üu]k|en\s+k[üu][cç][üu]k|maximum|minimum", q)
+                or (re.search(r"\bmax\b", q) and re.search(r"\bmin\b", q)))
+                and (_INTERVAL_RE.search(q) or re.search(r"aral[ıi][ğg]|interval", q))):
             return 0.98
-        if re.search(r"meydan|alan|area|square", q) and re.search(r"ceklen|cekli|çaklen|çakli|çevrili|sinirlan|sinirli|ınırl|between|aras", q):
-            return 0.9
+        if re.search(r"meydan|alan|area|square", q):
+            if re.search(r"ceklen|cekli|çaklen|çakli|çevrili|sinirlan|sinirli|ınırl|between|aras", q):
+                return 0.9
+            try:
+                if self._area_data(question):
+                    return 0.9
+            except Exception:  # noqa: BLE001
+                pass
         return 0.0
 
     def solve(self, question: str) -> Solution:
@@ -114,8 +120,9 @@ class AdvancedAnalysisSolver(Solver):
             data = self._extrema_data(question)
             if data:
                 return self._solve_extrema(question, data)
-        if re.search(r"en\s+b[üu]y[üu]k|en\s+k[üu][cç][üu]k|maximum|minimum", q) \
-                and re.search(r"aral[ıi][ğg]|interval", q):
+        if ((re.search(r"en\s+b[üu]y[üu]k|en\s+k[üu][cç][üu]k|maximum|minimum", q)
+                or (re.search(r"\bmax\b", q) and re.search(r"\bmin\b", q)))
+                and (_INTERVAL_RE.search(q) or re.search(r"aral[ıi][ğg]|interval", q))):
             data = self._closed_interval_data(question)
             if data:
                 return self._solve_closed_interval(question, data)
@@ -259,7 +266,9 @@ class AdvancedAnalysisSolver(Solver):
     # --------------------------------------------------------- eğriler arası alan
     def _area_data(self, question: str):
         clause = _clean_area_text(question)
-        equations: list[tuple[sp.Expr, sp.Symbol, sp.Expr]] = []
+        symbolic_curves: list[tuple[sp.Expr, sp.Symbol]] = []
+        constant_curves: list[sp.Expr] = []
+        verticals: list[sp.Basic] = []
         for text in re.findall(r"[^,;.]+=[^,;.]+", clause):
             lhs, _, rhs = text.partition("=")
             left = _lenient_expr(lhs)
@@ -267,24 +276,46 @@ class AdvancedAnalysisSolver(Solver):
             if left is None or right is None:
                 continue
             if left == sp.Symbol("y") or getattr(left, "name", "") == "y":
-                symbols = right.free_symbols
-                if len(symbols) == 1:
-                    var = sorted(symbols, key=lambda s: s.name)[0]
-                    equations.append((right.simplify(), var, right))
-        if len(equations) < 2 or equations[0][1] != equations[1][1]:
+                if right.free_symbols:
+                    if len(right.free_symbols) == 1:
+                        var = sorted(right.free_symbols, key=lambda s: s.name)[0]
+                        symbolic_curves.append((right.simplify(), var))
+                elif right.is_number:
+                    constant_curves.append(sp.sympify(right))
+                continue
+            if left == sp.Symbol("x") and right.is_number and not right.free_symbols:
+                verticals.append(sp.sympify(right))
+        if not symbolic_curves:
             return None
-        return {"f": equations[0][2], "g": equations[1][2], "var": equations[0][1]}
+        var = symbolic_curves[0][1]
+        curves = [curve for curve, curve_var in symbolic_curves if curve_var == var]
+        curves.extend(constant_curves)
+        if len(verticals) >= 2:
+            a, b = sorted(verticals, key=lambda v: float(v.evalf()))[:2]
+            if len(curves) == 1:
+                curves.append(sp.Integer(0))
+            if len(curves) < 2:
+                return None
+            return {"f": curves[0], "g": curves[1], "var": var, "a": a, "b": b}
+        if len(curves) >= 2:
+            return {"f": curves[0], "g": curves[1], "var": var, "a": None, "b": None}
+        return None
 
     def _solve_area(self, question: str, data) -> Solution:
         steps: list[Step] = []
         f, g, var = data["f"], data["g"], data["var"]
         steps.append(Step("Eğriler", latex=rf"y = {_L(f)}, \quad y = {_L(g)}"))
-        intersections = [r for r in sp.solve(sp.Eq(f, g), var) if r.is_real]
-        if len(intersections) < 2:
-            raise ValueError("İki eğri arasında sınırlı kapalı bölge bulunamadı.")
-        a, b = sorted(intersections, key=lambda r: float(r.evalf()))[:2]
-        steps.append(Step("Kesişim noktaları",
-                          latex=rf"{_L(f)} = {_L(g)} \Rightarrow {_L(var)} = {_L(a)}, \; {_L(b)}"))
+        if data["a"] is None:
+            intersections = [r for r in sp.solve(sp.Eq(f, g), var) if r.is_real]
+            if len(intersections) < 2:
+                raise ValueError("İki eğri arasında sınırlı kapalı bölge bulunamadı.")
+            a, b = sorted(intersections, key=lambda r: float(r.evalf()))[:2]
+            steps.append(Step("Kesişim noktaları",
+                              latex=rf"{_L(f)} = {_L(g)} \Rightarrow {_L(var)} = {_L(a)}, \; {_L(b)}"))
+        else:
+            a, b = data["a"], data["b"]
+            steps.append(Step("Dik sınır doğruları",
+                              latex=rf"{_L(var)} = {_L(a)}, \quad {_L(var)} = {_L(b)}"))
         upper = f.subs(var, sp.Rational(a + b) / 2)
         lower = g.subs(var, sp.Rational(a + b) / 2)
         if float(upper.evalf()) < float(lower.evalf()):

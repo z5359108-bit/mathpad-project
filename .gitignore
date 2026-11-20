@@ -15,3 +15,7 @@ venv/
 .coverage
 dist/
 build/
+
+# MathPad çalışma zamanı çıktıları
+ayarlar.json
+defter_resim/

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import re
 
 import sympy as sp
@@ -31,7 +32,7 @@ _MATRICES = re.compile(
 
 def _parse_matrices(text: str) -> list[sp.Matrix]:
     return [
-        sp.Matrix(eval(raw.replace(";", ","), {"__builtins__": {}}, {}))  # noqa: S307
+        sp.Matrix(ast.literal_eval(raw.replace(";", ",")))
         for raw in _MATRICES.findall(text)
     ]
 

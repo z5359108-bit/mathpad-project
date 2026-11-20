@@ -13,18 +13,18 @@ from ..utils import extract_expression, fold_turkmen, normalize, pick_symbol, tr
 from .base import Solution, Solver, Step
 
 _KW_STRONG = ("turev", "türev", "derivative", "integral", "limit", "sinir", "sınır", "taylor",
-              "seri", "maclaurin", "d/dx", "∫", "hosylay", "cak", "cek", "onumi", "onumi", "turev")
+              "seri", "maclaurin", "d/dx", "∫", "hosylay", "cak", "cek", "onumi", "onumi", "turev", "differensial")
 _KW_WEAK = ("fonksiyon", "function", "egri", "yaklas", "approach", "dx", "acilim", "cek")
 
 _ORDER_WORDS = {"ikinci": 2, "ikinji": 2, "second": 2, "onumi": 2, "önümi": 2,
                 "üçüncü": 3, "uchunji": 3, "third": 3, "dördüncü": 4, "dordunji": 4, "fourth": 4}
-_BOUND = r"([\w.]+(?:\s*/\s*[\w.]+)?)"
+_BOUND = r"(-?[\w.]+(?:\s*/\s*-?[\w.]+)?)"
 _DEF_TR = re.compile(
     rf"{_BOUND}\s*'?\s*(?:dan|den|tan|ten)\s+{_BOUND}\s*'?\s*(?:ya|ye|a|e)\b"
 )
 _DEF_EN = re.compile(rf"\bfrom\s*{_BOUND}\s*(?:to|up\s*to)\s*{_BOUND}")
 _DEF_SYM = re.compile(r"∫\s*_?\s*\{?\s*([^{}\s,]+)\s*\}?\s*\^\s*\{?\s*([^{}\s,]+)\s*\}?")
-_LIMIT = re.compile(r"(\w+)\s*(?:->|\u2192|yaklas?i[rğ]?[en]*k?e?n?|yaklasi[rğ]?[en]*|approaches|approaching|goes\s*to)\s*(-?[\w.∞]+)")
+_LIMIT = re.compile(r"(\w+)\s*(?:->|\u2192|yaklas?i[rğ]?[en]*k?e?n?|yaklasi[rğ]?[en]*|approaches|approaching|goes\s*to)\s*(-?[\w.∞]+[+-]?)")
 _NOISE = frozenset({
     "türev", "türevi", "türevini", "derivative", "integral", "integrali", "integralini",
     "al", "alınız", "hesapla", "bul", "nedir", "limit", "limiti", "limitini",
@@ -35,6 +35,8 @@ _NOISE = frozenset({
     "birinci", "ikinci", "üçüncü", "dördüncü", "beşinci", "first", "second", "third", "fourth", "fifth",
     "ikinji", "onumi", "önümi", "funksiyanyn", "funksiyanin", "funksiyanynyn",
     "turev", "turevi", "turevini", "turevleri", "turevleri",
+    "differensial", "differensialyny", "differensialyn",
+    "tapyn", "tapy", "tap", "tapmaly", "tapmag",
 })
 
 
@@ -78,21 +80,25 @@ def is_number(raw: str) -> bool:
     return bool(re.fullmatch(r"-?\d+(?:\.\d+)?", raw))
 
 
-def _limit_target(question: str) -> tuple[sp.Symbol, sp.Basic, str] | None:
+def _limit_target(question: str) -> tuple[sp.Symbol, sp.Basic, str, str] | None:
     match = _LIMIT.search(normalize(question))
     if not match:
         return None
     var_name = match.group(1)
     raw_value = match.group(2).lower()
+    direction = ""
+    if len(raw_value) > 1 and raw_value[-1] in "+-":
+        direction = raw_value[-1]
+        raw_value = raw_value[:-1]
     sign = -1 if raw_value.startswith("-") else 1
     base = raw_value.lstrip("+-")
     infinity_by_name = {"inf": sp.oo, "infinity": sp.oo, "sonsuz": sp.oo, "oo": sp.oo}
     if base in infinity_by_name:
-        return sp.Symbol(var_name), sign * infinity_by_name[base], match.group(0)
+        return sp.Symbol(var_name), sign * infinity_by_name[base], match.group(0), direction
     value = try_sympify(raw_value)
     if value is None:
         return None
-    return sp.Symbol(var_name), value, match.group(0)
+    return sp.Symbol(var_name), value, match.group(0), direction
 
 
 def _taylor_params(question: str, default_order: int = 6) -> tuple[sp.Basic, int, str]:
@@ -127,7 +133,7 @@ class CalculusSolver(Solver):
 
     def solve(self, question: str) -> Solution:
         q = fold_turkmen(question).lower()
-        if re.search(r"türev|turev|derivative|d/dx|hosylay|ikinji|onumi|onumi", q):
+        if re.search(r"türev|turev|derivative|differensial|d/dx|hosylay|ikinji|onumi|onumi", q):
             return self._derivative(question)
         if re.search(r"integral|∫", q):
             return self._integral(question)
@@ -158,6 +164,10 @@ class CalculusSolver(Solver):
         expr = try_sympify(candidate)
         if expr is None:
             raise ValueError(f"Fonksiyon ayrıştırılamadı: '{candidate}'")
+        if expr.atoms(sp.Abs):
+            real_map = {s: sp.Symbol(s.name, real=True) for s in expr.free_symbols}
+            if real_map:
+                expr = expr.subs(real_map)
         var = pick_symbol(expr)
         steps.append(Step("Fonksiyon", content=expr, detail=f"değişken: {var.name}"))
         if order != 1:
@@ -246,7 +256,7 @@ class CalculusSolver(Solver):
         target = _limit_target(question)
         q = question
         if target:
-            var, value, span = target
+            var, value, span, direction = target
             q = q.replace(span, " ")
         else:
             expr_probe = try_sympify(extract_expression(q, extra_noise=_NOISE))
@@ -254,15 +264,22 @@ class CalculusSolver(Solver):
                 raise ValueError("Limit noktası bulunamadı ('x -> 0' gibi bir hedef bekleniyor).")
             var = pick_symbol(expr_probe)
             value = sp.Integer(0)
+            direction = ""
         candidate = extract_expression(q, extra_noise=_NOISE)
         expr = try_sympify(candidate)
         if expr is None:
             raise ValueError(f"Fonksiyon ayrıştırılamadı: '{candidate}'")
         steps.append(Step("Fonksiyon", content=expr))
+        if direction in ("+", "-"):
+            side = "+" if direction == "+" else "-"
+            detail = "sağdan yaklaşıyor (x → a⁺)" if direction == "+" else "soldan yaklaşıyor (x → a⁻)"
+            steps.append(Step("Yönlü limit",
+                              latex=f"\\lim_{{{var.name} \\to {to_latex(value)}{side}}} \\left({to_latex(expr)}\\right)",
+                              detail=detail))
         steps.append(Step(f"{var.name} -> {to_latex(value)} hedefi",
                           latex=f"{var.name} \\to {to_latex(value)}"))
         steps.extend(limit_steps(expr, var, value))
-        result = sp.limit(expr, var, value, "+-")
+        result = sp.limit(expr, var, value, direction if direction else "+-")
         steps.append(Step("Sonuç", content=result))
         return self._solution(question, result, steps, "Limit")
 
