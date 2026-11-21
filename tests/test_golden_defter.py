@@ -23,7 +23,7 @@ class TestGoldenDefter(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         with open(GOLDEN_PATH, encoding="utf-8") as f:
-            cls.golden = json.load(f)["sorular"]
+            cls.golden = json.load(f)
         cls.pad = MathPad()
 
     def test_count(self):

@@ -93,10 +93,12 @@ class AdvancedAnalysisSolver(Solver):
     title = "İleri Analiz"
 
     def can_handle(self, question: str) -> float:
+        q = _norm(question)
+        if re.search(r"d[oö]n[eé]l?|d[oö]ngel?", q) and re.search(r"hacim|hacmi", q):
+            return 0.9 if self._volume_data(question) else 0.0
         parse = _function_of(question)
         if not parse:
             return 0.0
-        q = _norm(question)
         if re.search(r"te[gğ]et|tangent", q):
             return 0.9
         if re.search(r"ekstremum|extremum|kritik nokta|max\s*ve\s*min\s*nokta", q):
@@ -113,10 +115,17 @@ class AdvancedAnalysisSolver(Solver):
                     return 0.9
             except Exception:  # noqa: BLE001
                 pass
+        if re.search(r"d[oö]n[eé]l?|d[oö]ngel?", q) and re.search(r"hacim|hacmi", q):
+            if self._volume_data(question):
+                return 0.9
         return 0.0
 
     def solve(self, question: str) -> Solution:
         q = _norm(question)
+        if re.search(r"d[oö]n[eé]l?|d[oö]ngel?", q) and re.search(r"hacim|hacmi", q):
+            data = self._volume_data(question)
+            if data:
+                return self._solve_volume(question, data)
         if re.search(r"te[gğ]et|tangent", q):
             data = self._tangent_data(question)
             if data:
@@ -137,7 +146,8 @@ class AdvancedAnalysisSolver(Solver):
                 return self._solve_area(question, data)
         raise ValueError("İleri analiz alt problemi belirlenemedi.")
 
-    def _solution(self, question: str, result, steps: list[Step], title: str) -> Solution:
+    def _solution(self, question: str, result, steps: list[Step], title: str,
+                  data: dict | None = None) -> Solution:
         return Solution(
             question=question,
             solver=self.name,
@@ -146,6 +156,7 @@ class AdvancedAnalysisSolver(Solver):
             result_tex=to_latex(result),
             result_text=to_text(result),
             steps=steps,
+            data=data or {},
         )
 
     # ------------------------------------------------------- teğet denklemi
@@ -178,7 +189,10 @@ class AdvancedAnalysisSolver(Solver):
                           latex=rf"y - {_L(value0)} = {_L(slope_at)}\left({var.name} - {_L(x0)}\right) \Rightarrow y = {_L(line)}"))
         result = sp.Eq(y_sym, line, evaluate=False)
         steps.append(Step("Sonuç", content=result))
-        return self._solution(question, result, steps, "Teğet denklemi")
+        return self._solution(question, result, steps, "Teğet denklemi", data={
+            "kind": "tangent", "expr": expr, "var": var, "x0": x0,
+            "value0": value0, "slope": slope_at, "line": line,
+        })
 
     # ------------------------------------------------------------- ekstremum
     def _extrema_data(self, question: str):
@@ -220,7 +234,17 @@ class AdvancedAnalysisSolver(Solver):
             steps.append(Step("Yerel minimum(lar)", latex=r" \quad ".join(min_tex)))
         result = sp.simplify(expr.subs(var, criticals[0])) if len(criticals) == 1 else steps
         summary_tex = r" \quad ".join(max_tex + min_tex)
-        return self._solution(question, summary_tex, steps, "Ekstremum noktaları")
+        class_task = []
+        for c in criticals:
+            second_at = f2.subs(var, c)
+            if second_at < 0:
+                class_task.append((c, "max"))
+            elif second_at > 0:
+                class_task.append((c, "min"))
+        return self._solution(question, summary_tex, steps, "Ekstremum noktaları", data={
+            "kind": "ekstremum", "expr": expr, "var": var,
+            "criticals": criticals, "f1": f1, "f2": f2, "classes": class_task,
+        })
 
     # ------------------------------------------------- kapalı aralıkta değerler
     def _closed_interval_data(self, question: str):
@@ -266,7 +290,11 @@ class AdvancedAnalysisSolver(Solver):
         steps.append(Step("Karşılaştırma",
                           latex=rf"\max = f({_L(max_c)}) = {_L(values[max_c])}, \quad \min = f({_L(min_c)}) = {_L(values[min_c])}"))
         result_tex = rf"\max f = {_L(values[max_c])}, \quad \min f = {_L(values[min_c])}"
-        return self._solution(question, result_tex, steps, "Kapalı aralıkta en büyük/en küçük değer")
+        return self._solution(question, result_tex, steps, "Kapalı aralıkta en büyük/en küçük değer", data={
+            "kind": "closed_interval", "expr": expr, "var": var,
+            "a": a, "b": b, "f1": f1, "criticals": criticals, "values": values,
+            "max_c": max_c, "min_c": min_c,
+        })
 
     # --------------------------------------------------------- eğriler arası alan
     def _area_data(self, question: str):
@@ -346,7 +374,70 @@ class AdvancedAnalysisSolver(Solver):
                           latex=rf"\left[ {_L(antiderivative)} \right]_{{ {_L(a)} }}^{{ {_L(b)} }} = {_L(upper_at)} - ({_L(lower_at)})"))
         result = sp.integrate(diff, (var, a, b))
         steps.append(Step("Sonuç", content=result))
-        return self._solution(question, result, steps, "Eğrilerle sınırlı alan")
+        return self._solution(question, result, steps, "Eğrilerle sınırlı alan", data={
+            "kind": "area", "f": f, "g": g, "var": var, "a": a, "b": b,
+            "diff": diff, "antiderivative": antiderivative,
+        })
+
+
+    # ------------------------------------------------------- dönel cisim hacmi
+    def _volume_data(self, question: str):
+        q = _norm(question)
+        q = q.replace(",", " ")
+        func = _function_of(question)
+        if func is None:
+            m = re.search(r"\b([a-z])\s*=\s*(.+?)\s+([a-z])\s*=\s*(-?\d+(?:/\d+)?)\s*\.\.\s*(-?\d+(?:/\d+)?)", q)
+            if not m:
+                m = re.search(r"\b([a-z])\s*=\s*(.+?)\s+([a-z])\s*=\s*(-?\d+)\s*dan?\s+(-?\d+)\s*[yae]\b", q)
+            if not m or m.group(1) != m.group(3):
+                return None
+            expr = _lenient_expr(m.group(2))
+            if expr is None or not expr.has(sp.Symbol(m.group(1))):
+                return None
+            func = (expr, sp.Symbol(m.group(1)))
+        m = re.search(rf"\b{func[1].name}\s*=\s*(-?\d+)\s*(?:\.\.|dan|den)\s+(-?\d+)\s*(?:[yae]\b|\.\.)", q)
+        if not m:
+            m = re.search(rf"\b{func[1].name}\s*=\s*(-?\w+)\.\.\s*(-\w+|\w+)", q)
+        if not m:
+            m = re.search(r"\bfrom\s*(-?[\w.π/]+)\s+to\s*(-?[\w.π/]+)", q)
+        if not m:
+            return None
+        lo, hi = None, None
+        try:
+            if ".." in m.group(0):
+                lo = try_sympify(m.group(1))
+                hi = try_sympify(m.group(2))
+            else:
+                lo = try_sympify(m.group(1))
+                hi = try_sympify(m.group(2))
+        except Exception:  # noqa: BLE001
+            return None
+        if lo is None or hi is None or not lo.is_number or not hi.is_number:
+            return None
+        if lo >= hi:
+            lo, hi = hi, lo
+        return {"expr": func[0], "var": func[1], "a": lo, "b": hi}
+
+    def _solve_volume(self, question: str, data) -> Solution:
+        steps: list[Step] = []
+        expr, var, a, b = data["expr"], data["var"], data["a"], data["b"]
+        steps.append(Step("Dönel hacim formülü",
+                          latex=rf"V = \pi \int_{{ {_L(a)} }}^{{ {_L(b)} }} y^2 \, d{_L(var.name)}",
+                          detail="eksen çevresinde dönen eğri silindirik dilim hacmi verir"))
+        square = sp.expand(expr ** 2)
+        steps.append(Step("Kare al", latex=rf"y^2 = \left({_L(expr)}\right)^2 = {_L(square)}"))
+        antiderivative = sp.integrate(square, var)
+        steps.append(Step("Antitürev", content=antiderivative))
+        result = sp.pi * sp.integrate(square, (var, a, b))
+        upper_at = sp.pi * antiderivative.subs(var, b)
+        lower_at = sp.pi * antiderivative.subs(var, a)
+        steps.append(Step("Sınırları yerine koy",
+                          latex=rf"\pi \left[ {_L(antiderivative)} \right]_{{ {_L(a)} }}^{{ {_L(b)} }} = {_L(simplify_safe(upper_at))} - {_L(simplify_safe(lower_at))} = {_L(result)}"))
+        steps.append(Step("Sonuç", content=result))
+        return self._solution(question, result, steps, "Dönel cisim hacmi", data={
+            "kind": "integral", "expr": square, "var": var,
+            "bounds": (a, b), "result": result,
+        })
 
 
 def simplify_safe(expr):

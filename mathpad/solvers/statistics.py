@@ -39,6 +39,10 @@ class StatisticsSolver(Solver):
             return 0.0
         if re.search(r"\^\s*\d", question):
             return 0.0
+        if re.search(r"\^\s*[a-w]", question):
+            return 0.0
+        if re.search(r"\b[a-z]\s*=\s*-?\d+\s*(?:to|dan|den)|\bto\s*(?:oo|sonsuz)|\boo\b|yaklasim|seri|serisi|yigilim", q):
+            return 0.0
         if re.search(r"[a-zA-Z_]{3,}\s*\(", question) and not re.search(
             r"sqrt|sin|cos|tan|log|ln|exp|abs|arcsin|arccos|min\(|max\(", question
         ):

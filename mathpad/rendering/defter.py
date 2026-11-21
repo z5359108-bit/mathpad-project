@@ -208,7 +208,18 @@ def _norm(text: str) -> str:
 
 
 def defter_satirlar(solution: Solution) -> list[str]:
-    """Kısa zincir satırları (son cevap dahil)."""
+    """Kısa zincir satırları (son cevap dahil).
+
+    Önce aile kurucu (kisa_satirlar) denenir; tanınmayan ailede genel
+    zincir (adım satırlarından derleme) kullanılır.
+    """
+    try:
+        from .kisa import kisa_satirlar
+        kisa = kisa_satirlar(solution)
+    except Exception:  # noqa: BLE001
+        kisa = None
+    if kisa:
+        return kisa
     lines = _chain(solution)
     final = _final(solution)
     if not final:
@@ -232,6 +243,5 @@ def _final_already_covered(final: str, lines: list[str]) -> bool:
 
 
 def defter_metni(solution: Solution) -> str:
-    """Defter modu çıktısı: başlık + kısa zincir; açıklama ve ondalık yok."""
-    lines = [f"[{solution.title}]", *defter_satirlar(solution)]
-    return "\n".join(lines)
+    """Defter modu çıktısı: yalnızca kısa zincir; başlık/açıklama/ondalık yok."""
+    return "\n".join(defter_satirlar(solution))

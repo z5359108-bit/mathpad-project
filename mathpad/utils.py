@@ -60,12 +60,18 @@ GENERIC_NOISE = frozenset(
 
 
 def _reword_functions(text: str) -> str:
-    """Okul yazimlari: tg->tan, ctg->cot, lg->log10 (tek yerde)."""
+    """Okul yazimlari: tg->tan, ctg->cot, lg->log10, arcsin->asin (tek yerde)."""
     text = re.sub(r"\btg\s*\(", "tan(", text)
     text = re.sub(r"\btg\s+([a-zA-Z0-9(])", r"tan \1", text)
     text = re.sub(r"\bctg\s*\(", "cot(", text)
     text = re.sub(r"\bctg\s+([a-zA-Z0-9(])", r"cot \1", text)
+    text = re.sub(r"\bctg\b", "cot", text)
     text = re.sub(r"\blg\s*\(", "log10(", text)
+    for plain, sympy_name in (("arcsin", "asin"), ("arccos", "acos"),
+                              ("arctan", "atan"), ("arctg", "atan"),
+                              ("arccot", "acot"), ("arccosec", "acsc"),
+                              ("arcsec", "asec")):
+        text = re.sub(rf"\b{plain}", sympy_name, text)
     return text
 
 
@@ -131,7 +137,10 @@ def try_sympify(text: str, locals_: dict | None = None) -> sp.Basic | None:
 
     local = {"sqrt": sp.sqrt, "pi": sp.pi, "oo": sp.oo, "E": sp.E, "e": sp.E, "abs": sp.Abs,
              "sin": sp.sin, "cos": sp.cos, "tan": sp.tan, "log": _log10, "log10": _log10,
-             "exp": sp.exp, "ln": sp.log, "i": sp.I, "j": sp.I}
+             "exp": sp.exp, "ln": sp.log, "i": sp.I, "j": sp.I,
+             "asin": sp.asin, "acos": sp.acos, "atan": sp.atan, "acot": sp.acot,
+             "arcsin": sp.asin, "arccos": sp.acos, "arctan": sp.atan, "arctg": sp.atan,
+             "arccot": sp.acot, "sec": sp.sec, "csc": sp.csc, "cot": sp.cot}
     if locals_:
         local.update(locals_)
     try:

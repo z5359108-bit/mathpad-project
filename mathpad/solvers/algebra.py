@@ -125,6 +125,7 @@ class AlgebraSolver(Solver):
     _OTHER_DOMAIN = re.compile(
         r"t\u00fcrev|turev|derivative|d/dx|integral|limit|hosylay|onumi|\u00f6n\u00fcmi"
         r"|te[gğ]et|tangent|ekstremum|extremum|meydan|alan|area|differensial|diferens"
+        r"|hacim|hacmi|donel|donu|donm|donul"
     )
 
     def can_handle(self, question: str) -> float:

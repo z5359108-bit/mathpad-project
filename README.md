@@ -10,10 +10,10 @@ Yalnızca `sympy`'ye dayanır; tüm çözücüler eklenebilir/çıkarılabilir e
 |---|---|
 | Aritmetik | işlemler, üs/kök, faktöriyel, yüzde (`%15'i 250`, `15% of 80`) |
 | Cebir | denklem çözümü (tekli/sistem), ikinci derece + diskriminant analizi, çarpanlara ayırma, açma, basitleştirme |
-| Kalkülüs | türev (N. mertebe), belirsiz/belirli integral, limit (±∞ dahil), Taylor/Maclaurin serisi |
+| Kalkülüs | türev (N. mertebe), belirsiz/belirli integral (sınırlarda `e^2`, `pi/2`, `2pi`, `sqrt(2)`), limit (±∞ dahil), Taylor/Maclaurin serisi, toplam/seri (`sum 1/2^n n=1 to oo`) |
 | Lineer Cebir | determinant (Sarrus adımı), ters matris, özdeğer/özvektör, rank, iz, transpoze, matris çarpımı |
-| İleri Cebir | eşitsizlikler (işaret tablosu, rasyonel), `|2x-3|=7` mutlak değer, log/üstel denklemler (`log_2(x+3)=4`, `3^(x+1)=81`), köklü denklemler (`sqrt(x+5)=x-1` + amaçlı kontrol), arifmetik/geometrik progressiya, Vieta teoremi, özdeşlik uygulaması (`a²+b²=(a+b)²−2ab`), kalan teoremi, binom katsayısı, kompleks sayılar (`(1+2i)(3-i)`, `|3+4i|`) |
-| İleri Analiz | teğet denklemi, ekstremumlar (2. türev testi), kapalı aralıkta max/min, eğrilerle sınırlı alan, kısmi integrasyon (`∫x·cosx`, `∫lnx`), yarı açı (`∫sin²x`), u-dönüşümü (`∫x·e^(x²)`), standart limitler (`(e^x−1)/x → 1`) |
+| İleri Cebir | eşitsizlikler (işaret tablosu, rasyonel), log/üstel **eşitsizlikler** (`log_2(x)<=3` → `(0; 8]`), `|2x-3|=7` mutlak değer (denklem + eşitsizlik), log/üstel denklemler (`log_2(x+3)=4`, `3^(x+1)=81`), köklü denklemler (`sqrt(x+5)=x-1` + amaçlı kontrol), arifmetik/geometrik progressiya, Vieta teoremi, özdeşlik uygulaması (`a²+b²=(a+b)²−2ab`), kalan teoremi, binom katsayısı, kompleks sayılar (`(1+2i)(3-i)`, `|3+4i|`) |
+| İleri Analiz | teğet denklemi, ekstremumlar (2. türev testi), kapalı aralıkta max/min, eğrilerle sınırlı alan, dönel cisim hacmi (`y=x^2 x=0..1` → `π/5`), kısmi integrasyon (`∫x·cosx`, `∫lnx`), yarı açı (`∫sin²x`), u-dönüşümü (`∫x·e^(x²)`), standart limitler (`(e^x−1)/x → 1`), `arctan/arcsin` türevleri |
 | Sayı Teorisi | EBOB/EKOK, asallık testi, asal çarpanlar, bölenler, modüler aritmetik, kombinasyon/permutasyon |
 | İstatistik | ortalama, medyan, mod, varyans, standart sapma, toplam, min/max, adet |
 
@@ -27,6 +27,9 @@ Yalnızca `sympy`'ye dayanır; tüm çözücüler eklenebilir/çıkarılabilir e
   - Cebir: lineer denklemde terim taşıma → bölme → kök → kontrol akışı; ikinci derecede katsayılar + diskriminant formülü + kök formülü
   - Belirli integral defter adımları (v1.3): `dx/(5x+1)` yazımı, `∫_0^1` doğrudan sınırlar, **kesirli sınırlar** (`from 0 to pi/4`, `0 dan 2/3 ye`), kalkülüsün ana teoremi akışı: F(üst) − F(alt) terim terim hesaplanır, `ln(1) = 0` gibi sadeleşmeler not edilir ve sonuç toplanır
   - **Defter zincirleri (v1.4)**: cevaplar okul defterindeki gibi birbirine bağlı derivasyon olarak yazılır, ör. `D=25-16=9, x_{1,2}=(5±3)/4, x_1=2, x_2=1/2`; `x_1+x_2=6, x_1x_2=5 ⟹ x_1²+x_2²=36-10=26`; `f'(x)=2sinx·cosx = sin2x`; `S=∫_0^1(x²-x³)dx=1/3-1/4=1/12`
+  - **Kısa zincir katmanı (v1.5)**: defter modu artık çözümün LaTeX'ini yamalamaz; her soru ailesi için doğrudan yapısal veriden kısa zincir üretir (`mathpad/rendering/kisa.py`). Başlık, açıklama cümlesi, ondalık yaklaşık değer, türev/integral kural listesi YOKTUR; ham LaTeX komutu ASLA çıkmaz. `MathPad.defter(soru)` ile Python API'den de erişilir. Tanınmayan soru ailesinde açık zincire geri düşer — sessiz çöp üretmez.
+  - **Doğrulayıcı katman** (`mathpad/verify.py`): çözücü sonucu döndürmeden önce kökleri denkleme koyar, türevi sayısal farkla, belirli integrali sayısal integrallerle, limiti yakın noktalarla yoklar; tutmazsa cevap yerine açık hata verir.
+  - **Altın defter + rastgele doğrulayıcı**: `golden_defter.json` (42 soru, birebir beklenen defter satırı, `tests/test_golden_defter.py`) ve `python fuzz_oracle2.py` (315 rastgele soru, bağımsız doğrulama).
   - **ASCII/Türkçe/Türkmençe serbest karışım**: `turevi`/`türevi`, `carpanlarina`/`çarpanlarına`, `ikinji onumi`/`ikinci türevi` — hepsi aynı çözücüye gider
 
 ## Yapı
@@ -39,6 +42,7 @@ Yalnızca `sympy`'ye dayanır; tüm çözücüler eklenebilir/çıkarılabilir e
 │   ├── cli.py               # cmd arayüzü (tek soru / REPL)
 │   ├── utils.py             # ayrıştırma yardımcıları (implicit çarpım, unicode…)
 │   ├── rendering/           # LaTeX ve düz metin katmanları
+│   │   └── kisa.py         # kısa defter zinciri üreticisi (42 altın soruyla birebir testli)
 │   └── solvers/             # değiştirilebilir çözücüler
 │       ├── base.py          # Solver arayüzü — kendi çözücünü yaz, register() ile ekle
 │       ├── arithmetic.py, algebra.py, calculus.py,
@@ -159,8 +163,11 @@ engine.register(MySolver())
 ## Testler ve demo
 
 ```bash
-python -m unittest discover -s tests -v   # 285 test
+python -m unittest discover -s tests -v   # 285 test (test_golden_defter dahil: 42/42)
 python fuzz_oracle.py                     # 180 rastgele soru, TOPLAM HATA: 0 olmali
+python fuzz_oracle2.py                    # 315 rastgele soru (eşitsizlik, mutlak değer, log/üstel,
+                                          # kök, ekstremum, teğet, dizi, integral, alan, limit, türev,
+                                          # diferansiyel), SORU: 315, HATA: 0 olmali
 python demo.py                            # 47 soru, otomatik doğrulamalı
 ```
 

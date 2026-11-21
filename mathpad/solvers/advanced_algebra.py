@@ -98,6 +98,10 @@ class AdvancedAlgebraSolver(Solver):
             return 0.88
         if self._log_data(question) or self._log_eval_data(question):
             return 0.85
+        if has_ineq and self._log_ineq_data(question):
+            return 0.96
+        if has_ineq and self._exp_ineq_data(question):
+            return 0.96
         if "=" not in q:
             if self._binomial_data(question) is not None:
                 return 0.85
@@ -138,6 +142,12 @@ class AdvancedAlgebraSolver(Solver):
         log_eval = self._log_eval_data(question)
         if log_eval:
             return self._solve_log_eval(question, log_eval)
+        log_ineq = self._log_ineq_data(question)
+        if log_ineq:
+            return self._solve_log_ineq(question, log_ineq)
+        exp_ineq = self._exp_ineq_data(question)
+        if exp_ineq:
+            return self._solve_exp_ineq(question, exp_ineq)
         ineq = self._ineq_data(question)
         if ineq:
             return self._solve_ineq(question, ineq)
@@ -287,6 +297,122 @@ class AdvancedAlgebraSolver(Solver):
         return pieces[0] if len(pieces) == 1 else sp.Union(*pieces)
 
     # ------------------------------------------------------------ mutlak değer
+    # ------------------------------------------------------ log/üslü eşitsizlikler
+    def _log_ineq_data(self, question: str):
+        q = _norm(question)
+        match = _INEQ_RE.search(q)
+        if not match:
+            return None
+        rel = {"<": "<", "<=": "<=", ">": ">", ">=": ">="}[match.group(0)]
+        lhs, rhs_text = q[:match.start()], q[match.end():]
+        terms = list(_LOG_TERM_RE.finditer(lhs))
+        if not terms:
+            return None
+        bases = {int(t.group(2)) for t in terms}
+        if len(bases) != 1:
+            return None
+        base = bases.pop()
+        if base <= 1:
+            return None
+        rhs = try_sympify(_strip_words(rhs_text).strip("? "))
+        if rhs is None or not rhs.is_number or rhs.is_real is False:
+            return None
+        parsed, span_end = [], 0
+        for idx, t in enumerate(terms):
+            sign = -1 if t.group("sign") == "-" else 1
+            arg = try_sympify(t.group(3))
+            if arg is None or not arg.free_symbols:
+                return None
+            between = lhs[span_end:t.start()].strip()
+            if idx > 0 and between and not re.fullmatch(r"[+\-]*", between):
+                return None
+            span_end = t.end()
+            parsed.append((sign, arg))
+        if lhs[span_end:].strip():
+            return None
+        return {"base": base, "rel": rel, "terms": parsed, "rhs": rhs}
+
+    def _solve_log_ineq(self, question: str, data) -> Solution:
+        steps: list[Step] = []
+        base, rel, terms, rhs = sp.Integer(data["base"]), data["rel"], data["terms"], data["rhs"]
+        var = sorted(set().union(*[a.free_symbols for _, a in terms]),
+                     key=lambda s: s.name)[0]
+        target = base ** rhs
+        for _, arg in terms:
+            steps.append(Step("Logaritmanın tanım kümesi",
+                              latex=rf"{_L(arg)} > 0",
+                              detail="logaritmanın argümanı pozitif olmalıdır"))
+        if len(terms) == 1:
+            body = terms[0][1]
+        else:
+            factors = [arg if sg > 0 else 1 / arg for sg, arg in terms]
+            body = sp.expand(sp.Mul(*factors))
+            steps.append(Step("Logaritmanın toplam kuralı",
+                              latex=rf"\log_{{ {_L(base)} }} f + \log_{{ {_L(base)} }} g = \log_{{ {_L(base)} }}(f \\cdot g)"))
+        sign_char = {"<": "<", "<=": "≤", ">": ">", ">=": "≥"}[rel]
+        if base < 1:
+            flipp = {"<": ">", "<=": ">=", ">": "<", ">=": "<="}
+            rel = flipp[rel]
+            sign_char = {"<": "<", "<=": "≤", ">": ">", ">=": "≥"}[rel]
+        rel_fun = {"<": sp.StrictLessThan, "<=": sp.LessThan,
+                   ">": sp.StrictGreaterThan, ">=": sp.GreaterThan}[rel]
+        steps.append(Step("Üslü biçime geç",
+                          latex=rf"{_L(body)} \;{sign_char}\; {_L(base)}^{{ {_L(rhs)} }} = {_L(target)}"))
+        domain = sp.S.Reals
+        for _, arg in terms:
+            try:
+                domain = domain.intersect(sp.solveset(arg > 0, var, sp.S.Reals))
+            except Exception:  # noqa: BLE001
+                continue
+        sol_set = sp.solveset(rel_fun(body, target), var, sp.S.Reals).intersect(domain)
+        steps.append(Step("Çözüm kümesi", content=sol_set))
+        return self._solution(question, sol_set, steps, "Logaritmik eşitsizlik")
+
+    _EXP_INEQ_RE = re.compile(
+        r"(?P<base>\d+)\s*\^\s*(?:\((?P<fa>[^()]+)\)|(?P<fb>[\w.]+))"
+        r"\s*(?P<op><=|>=|<|>)\s*(?P<rhs>[\w.]+)")
+
+    def _exp_ineq_data(self, question: str):
+        q = _norm(question)
+        match = self._EXP_INEQ_RE.search(q)
+        if not match:
+            return None
+        base = int(match.group("base"))
+        if base <= 1:
+            return None
+        f_text = match.group("fa") or match.group("fb")
+        if not re.search(r"[a-zA-Z]", f_text):
+            return None
+        f_expr = try_sympify(f_text)
+        rhs = try_sympify(match.group("rhs"))
+        if f_expr is None or rhs is None or not rhs.is_number:
+            return None
+        if not f_expr.free_symbols:
+            return None
+        return {"base": sp.Integer(base), "f": f_expr,
+                "rel": match.group("op"), "rhs": rhs}
+
+    def _solve_exp_ineq(self, question: str, data) -> Solution:
+        steps: list[Step] = []
+        base, rel, f_expr, rhs = data["base"], data["rel"], data["f"], data["rhs"]
+        var = sorted(f_expr.free_symbols, key=lambda s: s.name)[0]
+        target = sp.simplify(sp.log(rhs) / sp.log(base))
+        sign_char = {"<": "<", "<=": "≤", ">": ">", ">=": "≥"}[rel]
+        if base < 1:
+            flipp = {"<": ">", "<=": ">=", ">": "<", ">=": "<="}
+            rel = flipp[rel]
+            sign_char = {"<": "<", "<=": "≤", ">": ">", ">=": "≥"}[rel]
+        rel_fun = {"<": sp.StrictLessThan, "<=": sp.LessThan,
+                   ">": sp.StrictGreaterThan, ">=": sp.GreaterThan}[rel]
+        steps.append(Step("Üslü eşitsizlik",
+                          latex=rf"{_L(base)}^{{ {_L(f_expr)} }} \;{sign_char}\; {_L(rhs)}"))
+        steps.append(Step("Logaritma uygula",
+                          latex=rf"{_L(f_expr)} \;{sign_char}\; \log_{{ {_L(base)} }}({_L(rhs)}) = {_L(target)}",
+                          detail=rf"taban > 1 olduğundan eşitsizlik yönü değişmez"))
+        sol_set = sp.solveset(rel_fun(f_expr, target), var, sp.S.Reals)
+        steps.append(Step("Çözüm kümesi", content=sol_set))
+        return self._solution(question, sol_set, steps, "Üstel eşitsizlik")
+
     def _abs_data(self, q: str):
         match = _PIPES_RE.search(q)
         if not match:

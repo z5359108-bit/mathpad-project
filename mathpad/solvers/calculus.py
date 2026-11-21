@@ -19,7 +19,7 @@ _KW_WEAK = ("fonksiyon", "function", "egri", "yaklas", "approach", "dx", "acilim
 _ORDER_WORDS = {"ikinci": 2, "ikinji": 2, "second": 2,
                 "ucuncu": 3, "uchunji": 3, "third": 3,
                 "dorduncu": 4, "dordunji": 4, "fourth": 4}
-_BOUND = r"(-?[\w.]+(?:\s*/\s*-?[\w.]+)?)"
+_BOUND = r"(-?(?:[\w.\^*/π−]+|\s*\([^()]*\)|\s*/\s*[\w.]+)+)"
 _DEF_TR = re.compile(
     rf"{_BOUND}[\s'-]*(?:dan|den|tan|ten)\s+{_BOUND}[\s'-]*(?:ya|ye|a|e)\b"
 )
@@ -69,7 +69,10 @@ def _clean_order_phrases(question: str) -> str:
 
 def _bounds(question: str) -> tuple[sp.Basic, sp.Basic, str] | None:
     def to_bound(raw: str) -> sp.Basic | None:
-        return sp.Rational(raw) if is_number(raw) else try_sympify(raw)
+        raw = raw.replace("−", "-").strip()
+        if is_number(raw):
+            return sp.Rational(raw)
+        return try_sympify(raw)
 
     for pattern in (_DEF_SYM, _DEF_EN, _DEF_TR, _DEF_ARROW):
         match = pattern.search(question)
@@ -142,6 +145,8 @@ class CalculusSolver(Solver):
             return 0.7
         if re.search(r"\(\s*[^()]+?\s*\)\s*['′]", q):
             return 0.85
+        if re.search(r"\bsum\s+\S+\s+[a-z]\s*=\s*\S+\s+to\b", q):
+            return 0.92
         if re.search(r"\bsum\s+[a-z]\s*=|\bsumm|\bsum\s+[a-z]\s+[-\d]|\u03a3\s*_", q):
             return 0.85
         return self._score(q, strong=_KW_STRONG, weak=_KW_WEAK)
@@ -158,6 +163,12 @@ class CalculusSolver(Solver):
         normalized = re.sub(
             r"\b(summation|sum)\s+([a-zA-Z])\s*=?\s*([\-\w.]+)\s+(?:to\s+)?([\-\w.]+)\s+(?:of\s+)?(.+)",
             r"sum \2=\3 to \4 of \5", question, flags=re.IGNORECASE)
+        series_swapped = re.search(
+            r"\bsum\s+(.+)\s+([a-zA-Z])\s*=\s*([\-\w./]+)\s+to\s+([\-\w./]+)\s*$",
+            normalized, re.IGNORECASE)
+        if series_swapped:
+            normalized = (normalized[:series_swapped.start()]
+                          + f"sum {series_swapped.group(2)}={series_swapped.group(3)} to {series_swapped.group(4)} of {series_swapped.group(1)}")
         sum_match = re.search(
             r"\bsum\s+([a-zA-Z])\s*=\s*([\-\w.]+)\s+to\s+([\-\w.]+)\s+(?:of\s+)?(.+)",
             normalized, re.IGNORECASE)
@@ -392,7 +403,10 @@ class CalculusSolver(Solver):
                           detail=f"{var.name} = {lo} ... {hi}"))
         result = sp.summation(body, (var, lo, hi))
         steps.append(Step("Sonuc", content=result))
-        return self._solution(question, result, steps, "Sonlu toplam (sum)")
+        return self._solution(question, result, steps, "Sonlu toplam (sum)", data={
+            "kind": "series", "expr": body, "var": var,
+            "bounds": (lo, hi), "result": result,
+        })
 
     def _series(self, question: str) -> Solution:
         steps: list[Step] = []

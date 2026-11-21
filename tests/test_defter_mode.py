@@ -28,13 +28,13 @@ class DefterModeTests(unittest.TestCase):
     def test_denklem(self):
         out = self._out("3x^2-7x+2=0")
         self.assertIn("1/3", out)
-        self.assertIn("Δ", out)
+        self.assertIn("D = ", out)
         self.assertNotIn("\\approx", out)
         self.assertNotIn("≈", out)
 
     def test_esitsizlik(self):
         out = self._out("|x-4|<3")
-        self.assertIn("(1, 7)", out)
+        self.assertIn("(1; 7)", out)
         self.assertNotIn("\\approx", out)
 
     def test_limit(self):
@@ -63,7 +63,7 @@ class DefterModeTests(unittest.TestCase):
     def test_diferensial(self):
         final = self._final("f(x)=x^2*sin(x) diferensialyny tapyn")
         self.assertTrue(final.startswith("df = ("), final)
-        self.assertTrue(final.endswith(") dx"), final)
+        self.assertTrue(final.endswith(")dx"), final)
         self.assertNotIn("dx ", final)
 
     def test_ekstremum(self):
@@ -75,13 +75,13 @@ class DefterModeTests(unittest.TestCase):
 
     def test_teget(self):
         final = self._final("y=x^3-x eğrisine x0=2 teğet")
-        self.assertIn("11 x - 16", final)
+        self.assertIn("11x − 16", final)
 
     # --------------------------------------------------- biçim kuralları
     def test_polynomial_answer_expanded(self):
         final = self._final("f(x)=x^4-4x^2 ikinji önüm")
-        self.assertIn("12 x² - 8", final)
-        self.assertNotIn("3 x² - 2", final)
+        self.assertIn("12x² − 8", final)
+        self.assertNotIn("(3x² − 2)", final)
 
     def test_factor_request_keeps_factored(self):
         out = self._out("x^4-16 çarpanlarına ayır")
@@ -160,7 +160,8 @@ class DefterMenuTests(unittest.TestCase):
             with contextlib.redirect_stdout(buf):
                 m.defter_modu()
         out = buf.getvalue()
-        self.assertIn("[Denklem çözümü]", out)
+        self.assertNotIn("[Denklem çözümü]", out)
+        self.assertIn("D = ", out)
         self.assertNotIn("$$", out)
 
 
