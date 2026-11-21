@@ -44,8 +44,11 @@ Yalnızca `sympy`'ye dayanır; tüm çözücüler eklenebilir/çıkarılabilir e
 │       ├── arithmetic.py, algebra.py, calculus.py,
 │       ├── advanced_algebra.py, advanced_analysis.py,
 │       ├── linear_algebra.py, number_theory.py, statistics.py
-├── tests/                   # birim testleri (mathpad: 244; şifreleme araçlarıyla birlikte 280)
+├── tests/                   # birim testleri (259)
+│   └── test_defter_mode.py  # defter modu: soru tipi basina 1 test + kurallar
 ├── examples/                # demo çıktıları (defter.md, defter.html, defter.txt)
+├── mathpad_menu.py          # menü tabanlı ana araç (başlat / ayarlar)
+├── pydroid_baslat.py        # Pydroid 3 tek dokunuş başlatıcı
 ├── demo.py                  # 47 soruluk vitrin + doğrulama (repo kopyasında mathpad_demo.py)
 └── requirements.txt
 ```
@@ -88,6 +91,9 @@ python -m mathpad
 
 # Her çözümü render edilmiş PNG resim olarak kaydet (formüller çizilmiş halde)
 python -m mathpad --png resimler "x^2 - 3x + 2 = 0"
+
+# Defter modu: yalnızca kısa matematik zinciri (açıklama/ondalık yok)
+python -m mathpad --defter "3x^2-7x+2=0"
 
 # Terminalde okunabilir unicode çıktı istersen
 python -m mathpad --pretty "(2+3)*4"
@@ -152,7 +158,7 @@ engine.register(MySolver())
 ## Testler ve demo
 
 ```bash
-python -m unittest discover -s tests -v   # 92 test
+python -m unittest discover -s tests -v   # 259 test
 python demo.py                            # 47 soru, otomatik doğrulamalı
 ```
 

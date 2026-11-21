@@ -235,28 +235,6 @@ class CalculusSolver(Solver):
             result = sp.integrate(expr, (var, lower, upper))
             steps.insert(1, Step("Belirli integral aralığı",
                                  latex=f"\\int_{{{to_latex(lower)}}}^{{{to_latex(upper)}}}"))
-            upper_at = antiderivative.subs(var, upper)
-            lower_at = antiderivative.subs(var, lower)
-            steps.append(Step(
-                "Kalkülüsün ana teoremi: sınırları yerine koy",
-                latex=f"\\left[{to_latex(antiderivative)}\\right]_{{{to_latex(lower)}}}^{{{to_latex(upper)}}} = {to_latex(upper_at)} - {to_latex(lower_at)}",
-            ))
-            steps.append(Step(
-                f"Üst sınır: F({to_latex(upper)})",
-                latex=f"F({to_latex(upper)}) = {to_latex(upper_at)}",
-            ))
-            lower_detail = "ln(1) = 0 olduğu için bu terim sadeleşir" if lower == 0 else None
-            steps.append(Step(
-                f"Alt sınır: F({to_latex(lower)})",
-                latex=f"F({to_latex(lower)}) = {to_latex(lower_at)}",
-                detail=lower_detail,
-            ))
-            if lower_at == 0:
-                steps.append(Step(
-                    "Topla ve sadeleştir",
-                    latex=f"{to_latex(upper_at)} - {to_latex(lower_at)} = {to_latex(result)}",
-                    detail="sıfır terimi düşer",
-                ))
             divergent = result == sp.nan or result.has(sp.oo) or result == sp.zoo
             if divergent:
                 singulars = []
@@ -273,6 +251,30 @@ class CalculusSolver(Solver):
                                   latex=r"\text{integral yakınsak değil}",
                                   detail="sonuç sonlu değil; bu integral yakınsak değildir"))
                 result = "Iraksak integral (yakınsak değil)"
+            else:
+                upper_at = antiderivative.subs(var, upper)
+                lower_at = antiderivative.subs(var, lower)
+                steps.append(Step(
+                    "Kalkülüsün ana teoremi: sınırları yerine koy",
+                    latex=f"\\left[{to_latex(antiderivative)}\\right]_{{{to_latex(lower)}}}^{{{to_latex(upper)}}} = {to_latex(upper_at)} - {to_latex(lower_at)}",
+                ))
+                steps.append(Step(
+                    f"Üst sınır: F({to_latex(upper)})",
+                    latex=f"F({to_latex(upper)}) = {to_latex(upper_at)}",
+                ))
+                lower_detail = "ln(1) = 0 olduğu için bu terim sadeleşir" if lower == 0 else None
+                steps.append(Step(
+                    f"Alt sınır: F({to_latex(lower)})",
+                    latex=f"F({to_latex(lower)}) = {to_latex(lower_at)}",
+                    detail=lower_detail,
+                ))
+                if lower_at == 0:
+                    steps.append(Step(
+                        "Topla ve sadeleştir",
+                        latex=f"{to_latex(upper_at)} - {to_latex(lower_at)} = {to_latex(result)}",
+                        detail="sıfır terimi düşer",
+                    ))
+
         else:
             result = sp.integrate(expr, var)
         steps.append(Step("Sonuç", content=result))

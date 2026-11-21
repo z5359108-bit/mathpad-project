@@ -67,3 +67,9 @@ class MathPad:
 
     def ask_many(self, *questions: str) -> list[Solution]:
         return [self.ask(q) for q in questions]
+
+    def defter(self, question: str) -> str:
+        """Defter modu: kisa matematik zinciri (aciklama ve ondalik yok)."""
+        from .rendering.defter import defter_metni
+
+        return defter_metni(self.ask(question))

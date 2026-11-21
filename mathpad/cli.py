@@ -52,6 +52,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--text", metavar="DOSYA", help="Düz metin defter yolu")
     parser.add_argument("-s", "--solver", help="Zorla kullanılacak çözücü adı")
     parser.add_argument("-p", "--pretty", action="store_true", help="LaTeX yerine unicode okunabilir çıktı")
+    parser.add_argument("--defter", action="store_true", help="Kısa defter zinciri: sadece matematik, açıklama ve ondalık yok")
     parser.add_argument("--png", metavar="KLASÖR", help="Her çözümü render edilmiş PNG resim olarak bu klasöre kaydet")
     parser.add_argument("--list", action="store_true", help="Kayıtlı çözücüleri listele")
     return parser
@@ -111,7 +112,11 @@ def main(argv: list[str] | None = None) -> int:
                     solution = engine.ask(question)
                 notebook.add(solution)
                 solved += 1
-                if args.pretty:
+                if args.defter:
+                    from .rendering.defter import defter_metni
+
+                    print(defter_metni(solution))
+                elif args.pretty:
                     if interactive:
                         _print_solution(solution)
                     else:
