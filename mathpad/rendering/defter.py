@@ -174,11 +174,15 @@ def _chain(solution: Solution) -> list[str]:
     return lines
 
 
+def _norm(text: str) -> str:
+    return text.replace("\\emptyset", "\\varnothing")
+
+
 def defter_satirlar(solution: Solution) -> list[str]:
     """Kısa zincir satırları (son cevap dahil)."""
     lines = _chain(solution)
     final = _final(solution)
-    if final and (not lines or lines[-1] != final):
+    if final and (not lines or _norm(lines[-1]) != _norm(final)):
         lines.append(final)
     return lines
 

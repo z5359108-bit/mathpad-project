@@ -44,7 +44,7 @@ Yalnızca `sympy`'ye dayanır; tüm çözücüler eklenebilir/çıkarılabilir e
 │       ├── arithmetic.py, algebra.py, calculus.py,
 │       ├── advanced_algebra.py, advanced_analysis.py,
 │       ├── linear_algebra.py, number_theory.py, statistics.py
-├── tests/                   # birim testleri (261)
+├── tests/                   # birim testleri (262)
 │   └── test_defter_mode.py  # defter modu: soru tipi basina 1 test + kurallar
 ├── examples/                # demo çıktıları (defter.md, defter.html, defter.txt)
 ├── mathpad_menu.py          # menü tabanlı ana araç (başlat / ayarlar)
@@ -159,7 +159,7 @@ engine.register(MySolver())
 ## Testler ve demo
 
 ```bash
-python -m unittest discover -s tests -v   # 261 test
+python -m unittest discover -s tests -v   # 262 test
 python demo.py                            # 47 soru, otomatik doğrulamalı
 ```
 

@@ -143,3 +143,12 @@ class DefterMenuTests(unittest.TestCase):
         self.assertNotIn("$$", out)
 
 
+
+
+class DefterKucukDuzeltmeler(unittest.TestCase):
+    def test_emptyset_tek_son_satiri(self):
+        from mathpad.engine import MathPad
+        from mathpad.rendering.defter import defter_metni
+
+        out = defter_metni(MathPad().ask("x^2<0"))
+        self.assertEqual(out.count("\\varnothing") + out.count("\\emptyset"), 1)
