@@ -40,6 +40,7 @@ class MathPad:
         best_score, best_solver = ranked[0]
         solution = None
         last_error: Exception | None = None
+        first_nsf: Exception | None = None
         attempt_threshold = min(self.threshold, 0.3)
         if best_score < attempt_threshold:
             raise NoSolverFound(
@@ -54,7 +55,8 @@ class MathPad:
                 verify_solution(solution)
                 break
             except NoSolverFound as exc:
-                last_error = exc
+                if first_nsf is None:
+                    first_nsf = exc
                 continue
             except VerificationError as exc:
                 last_error = SolverError(
@@ -64,6 +66,8 @@ class MathPad:
                 last_error = SolverError(f"{solver.name} çözücüsü hata verdi: {exc}")
                 continue
         if solution is None:
+            if first_nsf is not None:
+                raise first_nsf
             raise last_error or NoSolverFound("Hiçbir çözücü bu soruyu işleyemedi.")
         self.history.append(solution)
         return solution

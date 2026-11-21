@@ -16,6 +16,7 @@ Yalnızca `sympy`'ye dayanır; tüm çözücüler eklenebilir/çıkarılabilir e
 | İleri Analiz | teğet denklemi, ekstremumlar (2. türev testi), kapalı aralıkta max/min, eğrilerle sınırlı alan, dönel cisim hacmi (`y=x^2 x=0..1` → `π/5`), kısmi integrasyon (`∫x·cosx`, `∫lnx`), yarı açı (`∫sin²x`), u-dönüşümü (`∫x·e^(x²)`), standart limitler (`(e^x−1)/x → 1`), `arctan/arcsin` türevleri |
 | Sayı Teorisi | EBOB/EKOK, asallık testi, asal çarpanlar, bölenler, modüler aritmetik, kombinasyon/permutasyon |
 | İstatistik | ortalama, medyan, mod, varyans, standart sapma, toplam, min/max, adet |
+| Okul Ekstra | ters trigonometrik değerler (`arcsin(1/2)` → `π/6`), `\|f\|=\|g\|` denklemleri, tanım kümesi (`√`, payda, log), ters fonksiyon (küçük `x³+2` dahil; `x²` için sesli hata), `f(g(x))` kompozisyonu, artan/azalan aralıklar, dönüm noktaları, polinom bölme (bölüm + kalan) |
 
 - **Türkçe / Türkmençe / İngilizce** soru dili: `x^2 - 3x + 2 = 0`, `deňlemäni çöz: 3x + 4 = 10`, `x^2 fonksiyoniniň hosylayyşyny al`, `derivative of exp(2*x)` — hepsi çalışır.
 - **LaTeX çıktı**: her çözüm `$$...$$` bloklarıyla üretilir; HTML defteri MathJax ile tarayıcıda canlı render eder.
@@ -28,10 +29,7 @@ Yalnızca `sympy`'ye dayanır; tüm çözücüler eklenebilir/çıkarılabilir e
   - Belirli integral defter adımları (v1.3): `dx/(5x+1)` yazımı, `∫_0^1` doğrudan sınırlar, **kesirli sınırlar** (`from 0 to pi/4`, `0 dan 2/3 ye`), kalkülüsün ana teoremi akışı: F(üst) − F(alt) terim terim hesaplanır, `ln(1) = 0` gibi sadeleşmeler not edilir ve sonuç toplanır
   - **Defter zincirleri (v1.4)**: cevaplar okul defterindeki gibi birbirine bağlı derivasyon olarak yazılır, ör. `D=25-16=9, x_{1,2}=(5±3)/4, x_1=2, x_2=1/2`; `x_1+x_2=6, x_1x_2=5 ⟹ x_1²+x_2²=36-10=26`; `f'(x)=2sinx·cosx = sin2x`; `S=∫_0^1(x²-x³)dx=1/3-1/4=1/12`
   - **Kısa zincir katmanı (v1.5)**: defter modu artık çözümün LaTeX'ini yamalamaz; her soru ailesi için doğrudan yapısal veriden kısa zincir üretir (`mathpad/rendering/kisa.py`). Başlık, açıklama cümlesi, ondalık yaklaşık değer, türev/integral kural listesi YOKTUR; ham LaTeX komutu ASLA çıkmaz. `MathPad.defter(soru)` ile Python API'den de erişilir. Tanınmayan soru ailesinde açık zincire geri düşer — sessiz çöp üretmez.
-  - **Doğrulayıcı katman** (`mathpad/verify.py`): çözücü sonucu döndürmeden önce kökleri denkleme koyar, türevi sayısal farkla, belirli integrali sayısal integrallerle, limiti yakın noktalarla yoklar; tutmazsa cevap yerine açık hata verir.
-  - **Altın defter + rastgele doğrulayıcı**: `golden_defter.json` (42 soru, birebir beklenen defter satırı, `tests/test_golden_defter.py`) ve `python fuzz_oracle2.py` (315 rastgele soru, bağımsız doğrulama).
-  - **ASCII/Türkçe/Türkmençe serbest karışım**: `turevi`/`türevi`, `carpanlarina`/`çarpanlarına`, `ikinji onumi`/`ikinci türevi` — hepsi aynı çözücüye gider
-
+  - **Doğrulayıcı katman** (`mathpad/verify.py`): çözücü sonucu döndürmeden önce kökleri denkleme koyar, türevi sayısal farkla, belirli integrali sayısal integrallerle, limiti yakın noktalarla yoklar; ayrıca ters trigonometrik değer, `|f|=|g|` kök kümesi, tanım kümesi örnekleri, ters fonksiyon (`f∘f⁻¹ = x`), kompozisyon, monotonluk aralıkları, dönüm noktaları ve `P = D·q + r` bölünmesini de kontrol eder; tutmazsa cevap yerine açık hata verir.
 ## Yapı
 
 ```
@@ -47,8 +45,10 @@ Yalnızca `sympy`'ye dayanır; tüm çözücüler eklenebilir/çıkarılabilir e
 │       ├── base.py          # Solver arayüzü — kendi çözücünü yaz, register() ile ekle
 │       ├── arithmetic.py, algebra.py, calculus.py,
 │       ├── advanced_algebra.py, advanced_analysis.py,
+│       ├── school_extra.py    # ters trig, |f|=|g|, tanım kümesi, ters fonksiyon,
+│       │                      # f(g(x)), artan/azalan, dönüm noktası, bölme
 │       ├── linear_algebra.py, number_theory.py, statistics.py
-├── tests/                   # birim testleri (285)
+├── tests/                   # birim testleri (330)
 │   └── test_defter_mode.py  # defter modu: soru tipi basina 1 test + kurallar
 ├── examples/                # demo çıktıları (defter.md, defter.html, defter.txt)
 ├── mathpad_menu.py          # menü tabanlı ana araç (başlat / ayarlar)
@@ -163,11 +163,11 @@ engine.register(MySolver())
 ## Testler ve demo
 
 ```bash
-python -m unittest discover -s tests -v   # 285 test (test_golden_defter dahil: 42/42)
+python -m unittest discover -s tests -v   # 330 test (test_golden_defter dahil: 42/42)
 python fuzz_oracle.py                     # 180 rastgele soru, TOPLAM HATA: 0 olmali
-python fuzz_oracle2.py                    # 315 rastgele soru (eşitsizlik, mutlak değer, log/üstel,
-                                          # kök, ekstremum, teğet, dizi, integral, alan, limit, türev,
-                                          # diferansiyel), SORU: 315, HATA: 0 olmali
+python fuzz_oracle2.py                    # 450 rastgele soru (eşitsizlik, mutlak değer, log/üstel,
+                                          # kök, ekstremum, teğet, dizi, integral (e²/π sınırlı), alan,
+                                          # limit, türev, diferansiyel, seri), SORU: 450, HATA: 0 olmalı
 python demo.py                            # 47 soru, otomatik doğrulamalı
 ```
 

@@ -19,3 +19,9 @@ build/
 # MathPad çalışma zamanı çıktıları
 ayarlar.json
 defter_resim/
+
+# Defter/demo çıktıları (kök)
+defter.html
+defter.md
+defter.txt
+defter_resim/

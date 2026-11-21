@@ -90,7 +90,7 @@ $$</li>
 a = 1, \quad b = -3, \quad c = 2
 $$</li>
 <li><strong>Diskriminant formülü</strong>$$
-\Delta = b^2 - 4ac = -3^2 - 4 \cdot 1 \cdot 2 = 1
+\Delta = b^2 - 4ac = \left(-3\right)^2 - 4 \cdot 1 \cdot 2 = 1
 $$</li>
 <li><strong>Yorum</strong>$$
 \Delta > 0 \Rightarrow \text{iki farklı gerçek kök}
@@ -111,7 +111,7 @@ $$</li>
 a = 1, \quad b = 0, \quad c = 1
 $$</li>
 <li><strong>Diskriminant formülü</strong>$$
-\Delta = b^2 - 4ac = 0^2 - 4 \cdot 1 \cdot 1 = -4
+\Delta = b^2 - 4ac = \left(0\right)^2 - 4 \cdot 1 \cdot 1 = -4
 $$</li>
 <li><strong>Yorum</strong>$$
 \Delta < 0 \Rightarrow \text{gerçek kök yok, karmaşık kökler var}
@@ -161,7 +161,7 @@ $$</li>
 <li><strong>Sonuç</strong>$$
 3 x^{2} + 2
 $$</li></ol></section>
-<section><h2>15. Türev</h2><p class="question"><strong>Soru:</strong> d/dx sin(x)*exp(x)<br><small>çözücü: <code>calculus</code></small></p><p class="result"><strong>Sonuç:</strong> $$e^{x} \sin{\left(x \right)} + e^{x} \cos{\left(x \right)}$$</p><ol class="steps"><li><strong>Fonksiyon</strong><br><small>değişken: x</small>$$
+<section><h2>15. Türev</h2><p class="question"><strong>Soru:</strong> d/dx sin(x)*exp(x)<br><small>çözücü: <code>calculus</code></small></p><p class="result"><strong>Sonuç:</strong> $$\sqrt{2} e^{x} \sin{\left(x + \frac{\pi}{4} \right)}$$</p><ol class="steps"><li><strong>Fonksiyon</strong><br><small>değişken: x</small>$$
 e^{x} \sin{\left(x \right)}
 $$</li>
 <li><strong>Türev işlemi</strong>$$
@@ -176,8 +176,11 @@ $$</li>
 <li><strong>Türev tablosu (sin)</strong>$$
 \frac{d}{dx}[\sin x] = \cos x
 $$</li>
+<li><strong>Trigonometrik özdeşlik</strong>$$
+e^{x} \sin{\left(x \right)} + e^{x} \cos{\left(x \right)} = \sqrt{2} e^{x} \sin{\left(x + \frac{\pi}{4} \right)}
+$$</li>
 <li><strong>Sonuç</strong>$$
-e^{x} \sin{\left(x \right)} + e^{x} \cos{\left(x \right)}
+\sqrt{2} e^{x} \sin{\left(x + \frac{\pi}{4} \right)}
 $$</li></ol></section>
 <section><h2>16. 2. mertebeden türev</h2><p class="question"><strong>Soru:</strong> x^4 ikinci türev<br><small>çözücü: <code>calculus</code></small></p><p class="result"><strong>Sonuç:</strong> $$12 x^{2}$$</p><ol class="steps"><li><strong>Fonksiyon</strong><br><small>değişken: x</small>$$
 x^{4}
@@ -219,6 +222,15 @@ $$</li>
 <li><strong>Kalkülüsün ana teoremi: sınırları yerine koy</strong>$$
 \left[\frac{x^{3}}{3}\right]_{0}^{3} = 9 - 0
 $$</li>
+<li><strong>Üst sınır: F(3)</strong>$$
+F(3) = 9
+$$</li>
+<li><strong>Alt sınır: F(0)</strong><br><small>ln(1) = 0 olduğu için bu terim sadeleşir</small>$$
+F(0) = 0
+$$</li>
+<li><strong>Topla ve sadeleştir</strong><br><small>sıfır terimi düşer</small>$$
+9 - 0 = 9
+$$</li>
 <li><strong>Sonuç</strong>$$
 9
 $$</li></ol></section>
@@ -236,6 +248,12 @@ $$</li>
 $$</li>
 <li><strong>Kalkülüsün ana teoremi: sınırları yerine koy</strong>$$
 \left[- \cos{\left(x \right)}\right]_{0}^{\pi} = 1 - -1
+$$</li>
+<li><strong>Üst sınır: F(\pi)</strong>$$
+F(\pi) = 1
+$$</li>
+<li><strong>Alt sınır: F(0)</strong><br><small>ln(1) = 0 olduğu için bu terim sadeleşir</small>$$
+F(0) = -1
 $$</li>
 <li><strong>Sonuç</strong>$$
 2
@@ -501,6 +519,6 @@ $$</li>
 <li><strong>Sonuç</strong>$$
 9.0
 $$</li></ol></section>
-<footer>47 soru — 2026-11-20</footer>
+<footer>47 soru — 2026-11-21</footer>
 </body>
 </html>

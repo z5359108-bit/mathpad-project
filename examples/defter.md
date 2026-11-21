@@ -213,7 +213,7 @@
 4. **Diskriminant formülü**
 
    $$
-   \Delta = b^2 - 4ac = -3^2 - 4 \cdot 1 \cdot 2 = 1
+   \Delta = b^2 - 4ac = \left(-3\right)^2 - 4 \cdot 1 \cdot 2 = 1
    $$
 
 5. **Yorum**
@@ -264,7 +264,7 @@
 4. **Diskriminant formülü**
 
    $$
-   \Delta = b^2 - 4ac = 0^2 - 4 \cdot 1 \cdot 1 = -4
+   \Delta = b^2 - 4ac = \left(0\right)^2 - 4 \cdot 1 \cdot 1 = -4
    $$
 
 5. **Yorum**
@@ -415,7 +415,7 @@
 > **Soru:** d/dx sin(x)*exp(x)  
 > *(çözücü: `calculus`)*
 
-**Sonuç:** $$e^{x} \sin{\left(x \right)} + e^{x} \cos{\left(x \right)}$$
+**Sonuç:** $$\sqrt{2} e^{x} \sin{\left(x + \frac{\pi}{4} \right)}$$
 
 **Çözüm adımları:**
 
@@ -450,10 +450,16 @@
    \frac{d}{dx}[\sin x] = \cos x
    $$
 
-6. **Sonuç**
+6. **Trigonometrik özdeşlik**
 
    $$
-   e^{x} \sin{\left(x \right)} + e^{x} \cos{\left(x \right)}
+   e^{x} \sin{\left(x \right)} + e^{x} \cos{\left(x \right)} = \sqrt{2} e^{x} \sin{\left(x + \frac{\pi}{4} \right)}
+   $$
+
+7. **Sonuç**
+
+   $$
+   \sqrt{2} e^{x} \sin{\left(x + \frac{\pi}{4} \right)}
    $$
 
 ## 16. 2. mertebeden türev
@@ -567,7 +573,27 @@
    \left[\frac{x^{3}}{3}\right]_{0}^{3} = 9 - 0
    $$
 
-6. **Sonuç**
+6. **Üst sınır: F(3)**
+
+   $$
+   F(3) = 9
+   $$
+
+7. **Alt sınır: F(0)**
+   ln(1) = 0 olduğu için bu terim sadeleşir
+
+   $$
+   F(0) = 0
+   $$
+
+8. **Topla ve sadeleştir**
+   sıfır terimi düşer
+
+   $$
+   9 - 0 = 9
+   $$
+
+9. **Sonuç**
 
    $$
    9
@@ -613,7 +639,20 @@
    \left[- \cos{\left(x \right)}\right]_{0}^{\pi} = 1 - -1
    $$
 
-6. **Sonuç**
+6. **Üst sınır: F(\pi)**
+
+   $$
+   F(\pi) = 1
+   $$
+
+7. **Alt sınır: F(0)**
+   ln(1) = 0 olduğu için bu terim sadeleşir
+
+   $$
+   F(0) = -1
+   $$
+
+8. **Sonuç**
 
    $$
    2

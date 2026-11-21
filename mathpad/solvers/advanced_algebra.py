@@ -960,7 +960,7 @@ class AdvancedAlgebraSolver(Solver):
             else:
                 return None
         else:
-            poly_match = re.search(r"([x0-9^+\-*/(). ]+?)\s*polinomu\b", clause)
+            poly_match = re.search(r"([x0-9^+\-*/(). ]+?)\s*polinom(u|unu|un)?\b", clause)
             div_match = re.search(r"\b([a-z])\s*([+-])\s*(\d+(?:\.\d+)?)\s+ile\s+b", clause)
             if not poly_match or not div_match:
                 return None

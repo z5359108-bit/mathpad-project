@@ -134,6 +134,73 @@ for _ in range(20):
         r=s.result; r=r.subs(sp.Symbol("dx"),1) if isinstance(r,sp.Basic) else r
         return all(near(r.subs(x,v),ex.subs(x,v)) for v in (1.2,2.3)) or str(s.result)
     run("diferensial",q,chk)
+# L log / ustel esitsizlikler
+for _ in range(30):
+    b=R(2,5); d=R(1,3); c=R(-3,3)
+    op=random.choice(["<=",">="])
+    q=f"log_{b}(x{c:+d}){op}{d}"
+    def chk(s,b=b,d=d,c=c,op=op):
+        res=s.result
+        for t in [sp.Rational(1,2),2,3,5,sp.Rational(15,2),12]:
+            arg=t+c
+            if arg<=0: continue
+            val=sp.log(arg,b)
+            exp=(val<=d) if op=="<=" else (val>=d)
+            if bool(res.contains(t))!=bool(exp): return f"t={t}: {res}"
+        return True
+    run("log_esitsizlik",q,chk)
+for _ in range(25):
+    b=R(2,5); d=R(2,4)
+    op=random.choice(["<=",">="])
+    q=f"{b}^x{op}{b**d}"
+    def chk(s,b=b,d=d,op=op):
+        res=s.result
+        for t in [-3,-1,0,1,2,5]:
+            val=sp.Integer(b)**t
+            exp=(val<=b**d) if op=="<=" else (val>=b**d)
+            if bool(res.contains(t))!=bool(exp): return f"t={t}: {res}"
+        return True
+    run("ustel_esitsizlik",q,chk)
+
+# M belirli integral: e^2, pi/2, 2pi gibi sinirlar
+for _ in range(30):
+    k=R(1,3)
+    q=f"integral of 1/x from 1 to e^{k}" if k>1 else "integral of 1/x from 1 to e"
+    hi=sp.E**k
+    exp=sp.log(hi)
+    run("integral_e_sinir",q,lambda s,exp=exp: near(s.result,exp) or str(s.result))
+for _ in range(20):
+    f,fexpr=random.choice([("sin(x)",sp.sin(x)),("cos(x)",sp.cos(x)),("x*exp(x)",x*sp.exp(x)),("1/(x^2+1)",1/(x**2+1))])
+    lo,hi=random.choice([(0,sp.pi/2),(0,sp.pi),(0,2*sp.pi),(-1,1)])
+    q=f"integral of {f} from {sp.sstr(lo)} to {sp.sstr(hi)}"
+    exp=sp.integrate(fexpr,(x,lo,hi))
+    run("integral_pi_sinir",q,lambda s,exp=exp: near(s.result,exp) or str(s.result))
+
+# N seriler (regular toplama karsilastirma)
+for _ in range(30):
+    tip=random.choice(["geo_inf","geo_fin","pow","rec"])
+    if tip=="geo_inf":
+        r=random.choice([sp.Rational(1,2),sp.Rational(1,3),sp.Rational(2,3),sp.Rational(1,5)])
+        q=f"sum ({r})^n n=1 to oo"
+        exp=r/(1-r)
+        run("seri_sonsuz",q,lambda s,exp=exp: near(s.result,exp) or str(s.result))
+    elif tip=="geo_fin":
+        r=random.choice([sp.Rational(1,2),sp.Rational(1,3)])
+        n=R(2,9)
+        q=f"sum ({r})^k k=1 to {n}"
+        exp=r*(1-r**n)/(1-r)
+        run("seri_sonlu",q,lambda s,exp=exp: near(s.result,exp) or str(s.result))
+    elif tip=="pow":
+        n=R(3,9); w=random.choice(["k","k^2"])
+        q=f"sum {w} k=1 to {n}"
+        exp=sum(sp.Integer(i)**(2 if w=="k^2" else 1) for i in range(1,n+1))
+        run("seri_us",q,lambda s,exp=exp: near(s.result,exp) or str(s.result))
+    else:
+        n=R(2,8)
+        q=f"sum 1/(k*(k+1)) k=1 to {n}"
+        exp=sp.Rational(n,n+1)
+        run("seri_teleoskop",q,lambda s,exp=exp: near(s.result,exp) or str(s.result))
+
 tot=sum(len(v) for v in fails.values()); print("SORU:",sum(counts.values()),"HATA:",tot)
 for c in counts: print(f"{c}: {counts[c]-len(fails.get(c,[]))}/{counts[c]}")
 for c,l in fails.items():

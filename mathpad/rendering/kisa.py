@@ -198,6 +198,28 @@ def _rest_text(rest) -> str:
     return nb(rest)
 
 
+def _pi_scalar(coeff) -> str:
+    sign = MINUS if coeff < 0 else ""
+    c = abs(coeff)
+    if c == 1:
+        return sign + "\u03c0"
+    if c.is_Integer:
+        return sign + str(int(c)) + "\u03c0"
+    num_text = "" if c.p == 1 else str(c.p)
+    return f"{sign}{num_text}\u03c0/{c.q}"
+
+
+def _imag_scalar(coeff) -> str:
+    sign = MINUS if coeff < 0 else ""
+    c = abs(coeff)
+    if c == 1:
+        return sign + "i"
+    if c.is_Integer:
+        return sign + str(int(c)) + "i"
+    num_text = "" if c.p == 1 else str(c.p)
+    return f"{sign}{num_text}i/{c.q}"
+
+
 def _mul_text(expr_sp: sp.Mul) -> str:
     coeff, rest = expr_sp.as_coeff_Mul()
     if coeff == 0:
@@ -212,6 +234,10 @@ def _mul_text(expr_sp: sp.Mul) -> str:
             others.append(f)
     if not others and not recips:
         return _num(expr_sp)
+    if len(others) == 1 and not recips and others[0] == sp.pi:
+        return _pi_scalar(coeff)
+    if len(others) == 1 and not recips and others[0] == sp.I:
+        return _imag_scalar(coeff)
     sign, prefix = _coeff_prefix(coeff)
     core = ""
     prefix_match = re.fullmatch(r"\(1/(\d+)\)", prefix or "")
@@ -284,6 +310,8 @@ def _pow_text(expr: sp.Pow) -> str:
         return "e^(" + nb(inner) + ")"
     if exp == sp.Rational(1, 2):
         return _sqrt_text(base)
+    if exp == sp.Rational(1, 3):
+        return "\u221b(" + nb(base) + ")" if not base.is_Symbol else "\u221b" + nb(base)
     if exp.is_Rational and exp < 0:
         den = sp.Pow(base, -exp)
         num = "1"
@@ -1227,6 +1255,124 @@ def _kisa_volume(solution) -> list[str] | None:
     return [f"V = \u03c0\u222b{bnds} {nb(square)}d{var.name} = \u03c0({f_text})|{bnds} = {nb(result)}"]
 
 
+
+def _kok_ozet(crits, vname: str) -> str:
+    if len(crits) == 2 and sp.simplify(crits[0] + crits[1]) == 0:
+        return f"{vname} = \u00b1{nb(abs(crits[0]))}"
+    if not crits:
+        return f"{vname} yok"
+    return _koked_yaz(crits, vname)
+
+
+def _kisa_inverse_trig(solution) -> list[str] | None:
+    data = solution.data or {}
+    if data.get("kind") != "inverse_trig":
+        return None
+    fname = data.get("func_name") or "arcsin"
+    return [f"{fname}({nb(data['arg'])}) = {nb(data['angle'])}"]
+
+
+def _kisa_abs_abs(solution) -> list[str] | None:
+    data = solution.data or {}
+    if data.get("kind") != "abs_abs":
+        return None
+    f, g, roots = data["f"], data["g"], data["roots"]
+    vname = data["var"].name
+    if not roots:
+        return ["\u2205"]
+    lines = [f"({nb(f)}){_sup('2')} = ({nb(g)}){_sup('2')}"]
+    lines.append(_koked_yaz(roots, vname))
+    return lines
+
+
+def _kisa_domain(solution) -> list[str] | None:
+    data = solution.data or {}
+    if data.get("kind") != "domain":
+        return None
+    vname = data["var"].name
+    return [f"{vname} \u2208 {kume_yaz(data['res'])}"]
+
+
+def _tek_kesir_metni(inv):
+    """x/2 - 3/2 -> "(x - 3)/2" gibi tek kesir metni (mumkunse)."""
+    if not inv.is_Add:
+        return nb(inv)
+    dens = []
+    for t in inv.as_ordered_terms():
+        c = t.as_coeff_Mul()[0]
+        if c.is_Rational:
+            dens.append(c.q)
+        else:
+            return nb(inv)
+    if not dens:
+        return nb(inv)
+    d = sp.ilcm(*dens)
+    num = sp.expand(d * inv)
+    if not num.is_polynomial():
+        return nb(inv)
+    nt = nb(num)
+    nt = f"({nt})" if (" " in nt or MINUS in nt) else nt
+    return f"{nt}/{d}"
+
+
+def _kisa_inverse_function(solution) -> list[str] | None:
+    data = solution.data or {}
+    if data.get("kind") != "inverse_function":
+        return None
+    vname = data["var"].name
+    return [f"f\u207b\u00b9({vname}) = {_tek_kesir_metni(data['inv'])}"]
+
+
+def _kisa_compose(solution) -> list[str] | None:
+    data = solution.data or {}
+    if data.get("kind") != "composition":
+        return None
+    vname = data["var"].name
+    return [f"f(g({vname})) = {nb(data['comp'])}"]
+
+
+def _kisa_monotonic(solution) -> list[str] | None:
+    data = solution.data or {}
+    if data.get("kind") != "monotonicity":
+        return None
+    vname = data["var"].name
+    lines = [f"f{_PRIME}({vname}) = {nb(data['f1'])} = 0 \u21d2 {_kok_ozet(data['crits'], vname)}"]
+    res = solution.result or {}
+    artan, azalan = res.get("artan"), res.get("azalan")
+    if artan is not None and artan != sp.S.EmptySet:
+        lines.append(f"artan {vname} \u2208 {kume_yaz(artan)}")
+    if azalan is not None and azalan != sp.S.EmptySet:
+        lines.append(f"azalan {vname} \u2208 {kume_yaz(azalan)}")
+    return lines
+
+
+def _kisa_inflection(solution) -> list[str] | None:
+    data = solution.data or {}
+    if data.get("kind") != "inflection":
+        return None
+    vname = data["var"].name
+    points = data["points"]
+    lines = [f"f{_DOUBLE_PRIME}({vname}) = {nb(data['f2'])} = 0 \u21d2 {_kok_ozet([p for p, _ in points], vname)}"]
+    if not points:
+        lines.append(f"d\u00f6n\u00fcm {vname} yok")
+        return lines
+    if len(points) == 1:
+        p, y = points[0]
+        lines.append(f"d\u00f6n\u00fcm noktas\u0131 ({nb(p)}; {nb(y)})")
+    else:
+        text = ", ".join(f"({nb(p)}; {nb(y)})" for p, y in points)
+        lines.append(f"d\u00f6n\u00fcm noktalar\u0131 {text}")
+    return lines
+
+
+def _kisa_division(solution) -> list[str] | None:
+    data = solution.data or {}
+    if data.get("kind") != "polynomial_division":
+        return None
+    P, D, q, r = data["P"], data["D"], data["q"], data["r"]
+    return [f"{nb(P)} = ({nb(D)})({nb(q)}) + {nb(r)}"]
+
+
 # ---------------------------------------------------------------- yonlendirme
 def kisa_satirlar(solution):
     """Solution'dan defter-kisa zinciri; taninmayan aile icin None."""
@@ -1295,4 +1441,21 @@ def _kisa_dispatch(solution):
             return _kisa_tangent(solution)
         if title.startswith("D\u00f6nel"):
             return _kisa_volume(solution)
+    if solver == "school_extra":
+        if title.startswith("Ters trigonometrik"):
+            return _kisa_inverse_trig(solution)
+        if title.startswith("Mutlak de\u011ferli denklem |f|=|g|"):
+            return _kisa_abs_abs(solution)
+        if title == "Tan\u0131m k\u00fcmesi":
+            return _kisa_domain(solution)
+        if title == "Ters fonksiyon":
+            return _kisa_inverse_function(solution)
+        if title == "Fonksiyon kompozisyonu":
+            return _kisa_compose(solution)
+        if title == "Artan/azalan aral\u0131klar":
+            return _kisa_monotonic(solution)
+        if title == "D\u00f6n\u00fcm noktas\u0131":
+            return _kisa_inflection(solution)
+        if title == "Polinom b\u00f6lme":
+            return _kisa_division(solution)
     return None

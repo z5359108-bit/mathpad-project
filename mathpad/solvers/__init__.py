@@ -2,6 +2,7 @@ from .base import NoSolverFound, Solution, Step, Solver
 from .arithmetic import ArithmeticSolver
 from .algebra import AlgebraSolver
 from .advanced_algebra import AdvancedAlgebraSolver
+from .school_extra import SchoolExtraSolver
 from .calculus import CalculusSolver
 from .advanced_analysis import AdvancedAnalysisSolver
 from .linear_algebra import LinearAlgebraSolver
@@ -11,6 +12,7 @@ from .statistics import StatisticsSolver
 DEFAULT_SOLVERS = (
     AdvancedAlgebraSolver(),
     AdvancedAnalysisSolver(),
+    SchoolExtraSolver(),
     ArithmeticSolver(),
     AlgebraSolver(),
     CalculusSolver(),
@@ -27,6 +29,7 @@ __all__ = [
     "DEFAULT_SOLVERS",
     "AdvancedAlgebraSolver",
     "AdvancedAnalysisSolver",
+    "SchoolExtraSolver",
     "ArithmeticSolver",
     "AlgebraSolver",
     "CalculusSolver",

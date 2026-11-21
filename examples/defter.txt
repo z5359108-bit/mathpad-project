@@ -79,7 +79,7 @@ MathPad Demo Defteri
    3. Katsayılar
         a = 1, \quad b = -3, \quad c = 2
    4. Diskriminant formülü
-        \Delta = b^2 - 4ac = -3^2 - 4 \cdot 1 \cdot 2 = 1
+        \Delta = b^2 - 4ac = \left(-3\right)^2 - 4 \cdot 1 \cdot 2 = 1
    5. Yorum
         \Delta > 0 \Rightarrow \text{iki farklı gerçek kök}
    6. Kök formülü
@@ -97,7 +97,7 @@ MathPad Demo Defteri
    3. Katsayılar
         a = 1, \quad b = 0, \quad c = 1
    4. Diskriminant formülü
-        \Delta = b^2 - 4ac = 0^2 - 4 \cdot 1 \cdot 1 = -4
+        \Delta = b^2 - 4ac = \left(0\right)^2 - 4 \cdot 1 \cdot 1 = -4
    5. Yorum
         \Delta < 0 \Rightarrow \text{gerçek kök yok, karmaşık kökler var}
    6. Çözüm kümesi
@@ -162,8 +162,9 @@ x  + 5⋅x + 6
 
 15) Türev  [soruyu çözen: calculus]
    Soru : d/dx sin(x)*exp(x)
-   Sonuç:  x           x       
-ℯ ⋅sin(x) + ℯ ⋅cos(x)
+   Sonuç:     x    ⎛    π⎞
+√2⋅ℯ ⋅sin⎜x + ─⎟
+         ⎝    4⎠
    1. Fonksiyon
          x       
         ℯ ⋅sin(x)
@@ -175,9 +176,12 @@ x  + 5⋅x + 6
         \frac{d}{dx}\left[e^{x}\right] = e^{x}
    5. Türev tablosu (sin)
         \frac{d}{dx}[\sin x] = \cos x
-   6. Sonuç
-         x           x       
-        ℯ ⋅sin(x) + ℯ ⋅cos(x)
+   6. Trigonometrik özdeşlik
+        e^{x} \sin{\left(x \right)} + e^{x} \cos{\left(x \right)} = \sqrt{2} e^{x} \sin{\left(x + \frac{\pi}{4} \right)}
+   7. Sonuç
+            x    ⎛    π⎞
+        √2⋅ℯ ⋅sin⎜x + ─⎟
+                 ⎝    4⎠
 
 16) 2. mertebeden türev  [soruyu çözen: calculus]
    Soru : x^4 ikinci türev
@@ -234,7 +238,13 @@ x
         3 
    5. Kalkülüsün ana teoremi: sınırları yerine koy
         \left[\frac{x^{3}}{3}\right]_{0}^{3} = 9 - 0
-   6. Sonuç
+   6. Üst sınır: F(3)
+        F(3) = 9
+   7. Alt sınır: F(0)
+        F(0) = 0
+   8. Topla ve sadeleştir
+        9 - 0 = 9
+   9. Sonuç
         9
 
 19) Belirli integral  [soruyu çözen: calculus]
@@ -250,7 +260,11 @@ x
         -cos(x)
    5. Kalkülüsün ana teoremi: sınırları yerine koy
         \left[- \cos{\left(x \right)}\right]_{0}^{\pi} = 1 - -1
-   6. Sonuç
+   6. Üst sınır: F(\pi)
+        F(\pi) = 1
+   7. Alt sınır: F(0)
+        F(0) = -1
+   8. Sonuç
         2
 
 20) Limit  [soruyu çözen: calculus]
