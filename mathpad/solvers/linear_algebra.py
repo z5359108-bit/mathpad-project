@@ -62,9 +62,14 @@ class LinearAlgebraSolver(Solver):
 
     def _operation(self, question: str) -> str:
         q = fold_turkmen(question).lower()
+        matrices_present = bool(_MATRICES.search(q))
+        if matrices_present and len(_MATRICES.findall(q)) >= 2 and re.search(r"\]\s*[*×x]\s*\[", q.replace("×", "*")):
+            return "multiply"
         for op_name, pattern in _OP_PATTERNS.items():
             if pattern.search(q):
                 return op_name
+        if matrices_present and len(_MATRICES.findall(q)) >= 2:
+            return "multiply"
         return "determinant"
 
     def _apply(self, operation: str, matrices: list[sp.Matrix], question: str, steps: list[Step]):

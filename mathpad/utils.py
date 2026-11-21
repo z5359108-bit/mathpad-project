@@ -59,17 +59,43 @@ GENERIC_NOISE = frozenset(
 )
 
 
+def _reword_functions(text: str) -> str:
+    """Okul yazimlari: tg->tan, ctg->cot, lg->log10 (tek yerde)."""
+    text = re.sub(r"\btg\s*\(", "tan(", text)
+    text = re.sub(r"\btg\s+([a-zA-Z0-9(])", r"tan \1", text)
+    text = re.sub(r"\bctg\s*\(", "cot(", text)
+    text = re.sub(r"\bctg\s+([a-zA-Z0-9(])", r"cot \1", text)
+    text = re.sub(r"\blg\s*\(", "log10(", text)
+    return text
+
+
+def _degrees_to_radians(text: str) -> str:
+    """'sin(30°)' -> 'sin(30*pi/180)' (° isareti kullanildiginda)."""
+    if "°" not in text and "º" not in text:
+        return text
+    return re.sub(r"(-?\d+(?:\.\d+)?(?:/\d+)?)\s*[°º]", r"(\1*pi/180)", text)
+
+
 def normalize(text: str) -> str:
     """Unicode operatörleri ve süper üstleri sympy'nin anlayacağı biçime çevir."""
     text = fold_turkmen(text)
+    text = _reword_functions(text)
+    text = _degrees_to_radians(text)
     for src, dst in _UNICODE_HINTS.items():
         text = text.replace(src, dst)
+    text = _decimal_comma_bracket_safe(text)
     text = re.sub(r"√\s*\(([^)]+)\)", r"sqrt(\1)", text)
     text = re.sub(r"√\s*(\w+)", r"sqrt(\1)", text)
     text = re.sub(r"√", "sqrt", text)
     for src, digit in _SUPERSCRIPTS.items():
         text = text.replace(src, f"**{digit}")
     return text
+
+
+def _decimal_comma_bracket_safe(text: str) -> str:
+    """'0,5x+1=3' -> '0.5x+1=3'; koseli parantez icindeki listeler (matris/varyans) korunur."""
+    parts = re.split(r"(\[[^\]]*\])", text)
+    return "".join(p if p.startswith("[") else replace_decimal_comma(p) for p in parts)
 
 
 def _insert_implicit_multiplication(text: str) -> str:
@@ -98,16 +124,21 @@ def try_sympify(text: str, locals_: dict | None = None) -> sp.Basic | None:
         return None
     cleaned = _rewrite_func_powers(cleaned)
     cleaned = _insert_implicit_multiplication(cleaned)
+    def _log10(value, base=10):
+        if base == 10:
+            return sp.log(value, 10)
+        return sp.log(value, base)
+
     local = {"sqrt": sp.sqrt, "pi": sp.pi, "oo": sp.oo, "E": sp.E, "e": sp.E, "abs": sp.Abs,
-             "sin": sp.sin, "cos": sp.cos, "tan": sp.tan, "log": sp.log, "exp": sp.exp,
-             "ln": sp.log, "i": sp.I, "j": sp.I}
+             "sin": sp.sin, "cos": sp.cos, "tan": sp.tan, "log": _log10, "log10": _log10,
+             "exp": sp.exp, "ln": sp.log, "i": sp.I, "j": sp.I}
     if locals_:
         local.update(locals_)
     try:
-        result = sp.sympify(cleaned, locals=local, evaluate=True)
+        result = sp.sympify(cleaned, locals=local, evaluate=True, rational=True)
     except (sp.SympifyError, SyntaxError, TypeError, ValueError, AttributeError):
         return None
-    if isinstance(result, (sp.Tuple, tuple, list)):
+    if isinstance(result, (sp.Tuple, tuple, list)) or not isinstance(result, sp.Basic):
         return None
     return result
 
@@ -131,11 +162,26 @@ def extract_numbers(text: str) -> list[float]:
 
 
 def replace_decimal_comma(text: str) -> str:
-    """Yalnız boşluksuz '3,5' biçimindeki ondalık virgülleri noktaya çevir."""
-    return re.sub(r"(?<=\d),(?=\d)(?!\s*\d)", ".", text)
+    """'0,5' biçimindeki ondalık virgülü noktaya çevir.
+
+    Yalnızca en üst seviyede (parantez/köşeli parantez içi listeler korunur)
+    'rakkam,virgül,rakkam' sıkısıklığında çevirir: '0,5x+1=3' -> '0.5x+1=3'.
+    """
+    out: list[str] = []
+    depth = 0
+    for i, ch in enumerate(text):
+        if ch in "([":
+            depth += 1
+        elif ch in ")]":
+            depth = max(0, depth - 1)
+        if ch == "," and depth == 0 and 0 < i < len(text) - 1 and text[i - 1].isdigit() and text[i + 1].isdigit():
+            out.append(".")
+        else:
+            out.append(ch)
+    return "".join(out)
 
 
-_NOISE_PREFIXES = ("hosylay", "fonksiyon", "funksiya", "denlem", "hosy")
+_NOISE_PREFIXES = ("hosylay", "fonksiyon", "funksiya", "denlem", "hosy", "onum", "differens", "diferens", "diferansiye", "diferansiy", "diferansiyel")
 
 
 def extract_expression(text: str, extra_noise: frozenset[str] = frozenset()) -> str:

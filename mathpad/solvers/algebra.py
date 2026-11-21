@@ -16,6 +16,7 @@ _KW_STRONG = ("denklem", "coz", "solve", "equation", "kok", "carpan", "factor",
               "expand", "genislet", "simplify", "basitlest", "sadelest", "denlem")
 _KW_WEAK = ("degisken", "bilinmeyen", "polinom", "polynomial")
 _SPLIT = re.compile(r"[,;]|\bve\b|\band\b", flags=re.IGNORECASE)
+_INEQ_RE = re.compile(r"<=|>=|<(?!=)|>(?![=>])")
 _EQ_NOISE = r"\b(?:solve|çöz|çözün|coz|denklemini|denklemi|denklem|sistemi|equation|equations|" \
             r"köklerini|kökleri|bul|nedir|kaçtır|root|roots|denlem\S*|denlemani)\b"
 _FX_NOISE = r"\b(?:factor\S*|[çc]arpanlar?\S*|factorize|expand|[gğ]enişlet|[gğ]enislet|çyzyklary|" \
@@ -44,11 +45,60 @@ def _extract_equations(text: str) -> list[sp.Eq]:
         left, right = try_sympify_lenient(lhs), try_sympify_lenient(rhs)
         if left is None or right is None:
             continue
-        equations.append(sp.Eq(left, right, evaluate=False))
+        try:
+            equations.append(sp.Eq(left, right, evaluate=False))
+        except (sp.SympifyError, TypeError, ValueError):
+            continue
     return equations
 
 
 _INDEXED_SYMBOL = re.compile(r"^[a-z]_?\d{0,2}$")
+
+_REL_FUNCS = {
+    "<": sp.StrictLessThan,
+    "<=": sp.LessThan,
+    ">": sp.StrictGreaterThan,
+    ">=": sp.GreaterThan,
+}
+
+_RANGE_RE = re.compile(
+    r"[\[(]\s*(-?[\w./]+)\s*[;,]\s*(-?[\w./]+)\s*[\])]",
+    re.IGNORECASE,
+)
+
+
+def _extract_inequalities(text: str) -> list[sp.Relational]:
+    """'x^2-4=0 ve x>0' gibi sorulardaki esitsizlik kosullarini okur."""
+    cleaned = re.sub(_EQ_NOISE, " ", _clean(text), flags=re.IGNORECASE)
+    cleaned = cleaned.replace(":", " ")
+    conditions: list[sp.Relational] = []
+    for part in _SPLIT.split(cleaned):
+        part = part.strip(" .?!")
+        if "=" in part or not part:
+            continue
+        match = _INEQ_RE.search(part)
+        if not match:
+            continue
+        left = try_sympify(part[:match.start()])
+        right = try_sympify(part[match.end():])
+        if left is None or right is None:
+            continue
+        conditions.append(_REL_FUNCS[match.group(0)](left, right))
+    return conditions
+
+
+def _condition_holds(condition: sp.Relational, solution: dict) -> bool:
+    mapping = {s: val for s, val in solution.items() if s in condition.free_symbols}
+    if not mapping:
+        return True
+    try:
+        evaluated = condition.subs(mapping)
+    except Exception:  # noqa: BLE001
+        return True
+    from sympy.logic.boolalg import BooleanAtom
+    if isinstance(evaluated, BooleanAtom):
+        return bool(evaluated)
+    return True
 
 
 def _unknown_symbol(question: str) -> str | None:
@@ -107,7 +157,8 @@ class AlgebraSolver(Solver):
     def _is_transform_request(self, question: str) -> bool:
         return bool(re.search(r"\bfactor|carpan|expand|genislet|simplify|basitlest|sadelest", fold_turkmen(question).lower()))
 
-    def _solution(self, question: str, result, steps: list[Step], title: str) -> Solution:
+    def _solution(self, question: str, result, steps: list[Step], title: str,
+                  data: dict | None = None) -> Solution:
         return Solution(
             question=question,
             solver=self.name,
@@ -116,6 +167,7 @@ class AlgebraSolver(Solver):
             result_tex=to_latex(result),
             result_text=to_text(result),
             steps=steps,
+            data=data or {},
         )
 
     def _transform(self, question: str) -> Solution:
@@ -142,6 +194,7 @@ class AlgebraSolver(Solver):
 
     def _solve_equations(self, question: str) -> Solution:
         steps: list[Step] = []
+        conditions = _extract_inequalities(question)
         equations = _extract_equations(question)
         if not equations:
             raise ValueError("Denklem bulunamadı; '=' içeren bir ifade bekleniyordu.")
@@ -198,15 +251,65 @@ class AlgebraSolver(Solver):
                 pass
 
         results = sp.solve(equations, symbols, dict=True)
+        results = self._apply_interval_roots(equations, symbols, results, steps, question)
+        if conditions:
+            cond_tex = r", \quad ".join(to_latex(c) for c in conditions)
+            steps.append(Step("Koşullar", latex=cond_tex))
+            results = [sol for sol in results if all(_condition_holds(c, sol) for c in conditions)]
+        if is_quadratic and results and all(
+            all(v.is_real and v.is_number for v in sol.values()) for sol in results
+        ):
+            results = sorted(
+                results,
+                key=lambda sol: sp.default_sort_key(-list(sol.values())[0]),
+            )
+        eq_data = {
+            "kind": "equations",
+            "equations": equations,
+            "conditions": conditions,
+            "results": results,
+        }
         if len(equations) == 1 and results:
             self._append_trig_periodicity(steps, equations[0], symbols[0], results)
         if not results:
             steps.append(Step("Sonuç", latex="\\varnothing"))
-            return self._solution(question, "∅ (gerçek sayılarda çözüm yok)", steps, "Denklem çözümü (çözüm yok)")
+            return self._solution(
+                question, "∅ (gerçek sayılarda çözüm yok)", steps,
+                "Denklem çözümü (çözüm yok)", data=eq_data)
 
         solution = results[0] if len(results) == 1 else results
         steps.append(Step("Çözüm kümesi", content=solution))
-        return self._solution(question, results, steps, "Denklem çözümü")
+        return self._solution(
+            question, results, steps, "Denklem çözümü", data=eq_data)
+
+    @staticmethod
+    def _apply_interval_roots(equations, symbols, results, steps, question):
+        """'cos(2x)=0 [0;2pi]' yazımlarında aralıktaki TÜM kökleri döndürür."""
+        bounds = None
+        for match in _RANGE_RE.finditer(question):
+            lo = try_sympify(match.group(1))
+            hi = try_sympify(match.group(2))
+            if lo is not None and hi is not None and lo.is_number and hi.is_number and lo < hi:
+                bounds = match
+                break
+        if bounds is None or len(symbols) != 1 or len(equations) != 1:
+            return results
+        if not equations[0].atoms(sp.sin, sp.cos, sp.tan, sp.cot):
+            return results
+        try:
+            in_range = sp.solveset(
+                equations[0], symbols[0], domain=sp.Interval(lo, hi))
+        except Exception:  # noqa: BLE001
+            return results
+        if not isinstance(in_range, sp.FiniteSet) or not in_range:
+            return results
+        ordered = sorted(in_range, key=sp.default_sort_key)
+        steps.append(Step(
+            f"{to_latex(lo)} ≤ {to_latex(symbols[0])} ≤ {to_latex(hi)} aralığındaki kökler",
+            latex=r", \quad ".join(to_latex(v) for v in ordered),
+            detail="verilen aralık içindeki tüm kökler listelenir",
+        ))
+        return [{symbols[0]: value} for value in ordered]
 
     @staticmethod
     def _append_trig_periodicity(steps, equation, var, results) -> None:

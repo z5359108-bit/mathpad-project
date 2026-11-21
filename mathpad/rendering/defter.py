@@ -17,6 +17,7 @@ import sympy as sp
 
 from ..solvers.base import Solution
 from .latex import step_to_latex, to_latex
+from .latextounicode import latex_to_unicode
 
 _DX = sp.Symbol("dx")
 
@@ -45,7 +46,7 @@ _PLAIN_SUBS = (
     ("\\right]", "]"),
 )
 
-_DROP_TITLE = re.compile(r"^(Verilen|E.g?riler|Fonksiyon|Tekillik|Say.sal|Kontrol|K.k kontrol)")
+_DROP_TITLE = re.compile(r"^(Verilen|E.g?riler|Fonksiyon|Tekillik|Say.sal|Kontrol|K.k kontrol|Karmasik kokler|Karmaşık kök)")
 
 _FRAC_LN = re.compile(
     r"\\frac\{\\ln\{?\\left\(?([^(){}]*)\\right\)?\}?\}\{([^{}]+)\}")
@@ -92,11 +93,18 @@ def _soft_plain(text: str) -> str:
     return text
 
 
+_FRAC_LN_PREFIX = re.compile(r"(?<![\w.)])(\d+/\d+)\s*(ln\b|log\b)")
+
+
 def _clean_latex(text: str) -> str:
     text = _DOUBLE_CMD.sub(r"\\\1", text)
     text = _REL_BRACE.sub(r" \1 ", text)
     text = _ln_form(_i_fix(text))
-    return _soft_plain(text)
+    text = _soft_plain(text)
+    text = latex_to_unicode(text)
+    text = _i_fix(text)
+    text = _FRAC_LN_PREFIX.sub(r"(\1)\2", text)
+    return text.replace("  ", " ").strip()
 
 
 def _wants_factors(solution: Solution) -> bool:
@@ -115,12 +123,9 @@ def _final(solution: Solution) -> str:
     if isinstance(result, str):
         return _plain(result)
 
-    for step in solution.steps:
-        body = step.latex or ""
-        if "df" in body and "dx" in body:
-            cleaned = _clean_latex(body)
-            if cleaned:
-                return cleaned
+    if isinstance(result, sp.Basic) and result.is_Mul and _DX in result.args:
+        rest = sp.Mul(*[f for f in result.args if f != _DX])
+        return _clean_latex(rf"df = \left({to_latex(rest)}\right)\,dx")
 
     if isinstance(result, list) and result and isinstance(result[0], dict):
         chunks = []
@@ -129,10 +134,10 @@ def _final(solution: Solution) -> str:
             if len(items) == 1:
                 items.sort(key=lambda kv: float(sp.re(kv[1].evalf())))
             pairs = ", ".join(
-                rf"{_clean_latex(to_latex(sym))}_{{{n}}} = {_clean_latex(_value_latex(value))}"
+                rf"{to_latex(sym)}_{{{n}}} = {_value_latex(value)}"
                 for sym, value in items
             )
-            chunks.append(pairs)
+            chunks.append(_clean_latex(pairs))
         return "; ".join(chunks)
 
     expr = result
@@ -181,6 +186,15 @@ def _chain(solution: Solution) -> list[str]:
             continue
         if _DROP_TITLE.search(step.title):
             continue
+        if step.title.startswith("Genel çözüm") and any(
+            "aralığındaki kökler" in earlier.title for earlier in solution.steps
+        ):
+            continue
+        cleaned_probe = _clean_latex(body)
+        if cleaned_probe.startswith("df = "):
+            continue
+        if "\\binom" in body:
+            continue
         body = _clean_latex(body)
         if body in seen:
             continue
@@ -197,9 +211,24 @@ def defter_satirlar(solution: Solution) -> list[str]:
     """Kısa zincir satırları (son cevap dahil)."""
     lines = _chain(solution)
     final = _final(solution)
-    if final and (not lines or _norm(lines[-1]) != _norm(final)):
+    if not final:
+        return lines
+    if not lines or _norm(lines[-1]) != _norm(final):
+        if _final_already_covered(final, lines):
+            return lines
         lines.append(final)
     return lines
+
+
+def _final_already_covered(final: str, lines: list[str]) -> bool:
+    """Son cevap satırın parçaları zincirde zaten varsa tekrar ekleme."""
+    parts = [p.strip(" .;") for p in final.split(";") if p.strip(" .;")]
+    if not parts:
+        return False
+    return all(
+        any(part in line for line in lines)
+        for part in parts
+    )
 
 
 def defter_metni(solution: Solution) -> str:

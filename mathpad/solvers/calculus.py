@@ -10,24 +10,27 @@ from ..rendering.latex import to_latex
 from ..rendering.text import to_text
 from ..steps import derivative_steps, integral_steps, limit_steps
 from ..utils import extract_expression, fold_turkmen, normalize, pick_symbol, try_sympify
-from .base import Solution, Solver, Step
+from .base import NoSolverFound, Solution, Solver, Step
 
 _KW_STRONG = ("turev", "türev", "derivative", "integral", "limit", "sinir", "sınır", "taylor",
-              "seri", "maclaurin", "d/dx", "∫", "hosylay", "cak", "cek", "onumi", "onum", "turev", "differensial", "differensialyn", "differensialyny", "diferensial", "diferensialyn", "diferensialyny", "diferensiyal", "diferensiyalyn", "diferensiyalyny", "lim")
+              "seri", "maclaurin", "d/dx", "∫", "hosylay", "cak", "cek", "onumi", "onum", "turev", "differensial", "differensialyn", "differensialyny", "diferensial", "diferensialyn", "diferensialyny", "diferensiyal", "diferensiyalyn", "diferensiyalyny", "diferansiyel", "lim")
 _KW_WEAK = ("fonksiyon", "function", "egri", "yaklas", "approach", "dx", "acilim", "cek")
 
-_ORDER_WORDS = {"ikinci": 2, "ikinji": 2, "second": 2, "onumi": 2, "önümi": 2,
-                "üçüncü": 3, "uchunji": 3, "third": 3, "dördüncü": 4, "dordunji": 4, "fourth": 4}
+_ORDER_WORDS = {"ikinci": 2, "ikinji": 2, "second": 2,
+                "ucuncu": 3, "uchunji": 3, "third": 3,
+                "dorduncu": 4, "dordunji": 4, "fourth": 4}
 _BOUND = r"(-?[\w.]+(?:\s*/\s*-?[\w.]+)?)"
 _DEF_TR = re.compile(
-    rf"{_BOUND}\s*'?\s*(?:dan|den|tan|ten)\s+{_BOUND}\s*'?\s*(?:ya|ye|a|e)\b"
+    rf"{_BOUND}[\s'-]*(?:dan|den|tan|ten)\s+{_BOUND}[\s'-]*(?:ya|ye|a|e)\b"
 )
 _DEF_EN = re.compile(rf"\bfrom\s*{_BOUND}\s*(?:to|up\s*to)\s*{_BOUND}")
 _DEF_SYM = re.compile(r"∫\s*_?\s*\{?\s*([^{}\s,]+)\s*\}?\s*\^\s*\{?\s*([^{}\s,]+)\s*\}?")
-_LIMIT = re.compile(r"(\w+)\s*(?:->|\u2192|yaklas?i[rğ]?[en]*k?e?n?|yaklasi[rğ]?[en]*|approaches|approaching|goes\s*to)\s*(-?[\w.∞]+[+-]?)")
+_DEF_ARROW = re.compile(r"∫\s*\(\s*([^→()\s]+)\s*→\s*([^)\s]+)\s*\)")
+_LIMIT = re.compile(r"(\w+)\s*(?:->|\u2192|yaklas?i[rğ]?[en]*k?e?n?|yaklasi[rğ]?[en]*|approaches|approaching|goes\s*to|tends\s+to)\s*(-?[\w.∞]+[+-]?)")
 _PIPES_TO_ABS = re.compile(r"\|([^|]+)\|")
 _NOISE = frozenset({
     "türev", "türevi", "türevini", "derivative", "integral", "integrali", "integralini",
+    "integralyny", "integralyn", "integralynyn",
     "al", "alınız", "hesapla", "bul", "nedir", "limit", "limiti", "limitini",
     "sınır", "sınırı", "seri", "serisinin", "açılım", "açılımı", "açılımını", "taylor",
     "maclaurin", "expansion", "series", "dx", "d/dx",
@@ -44,9 +47,9 @@ _NOISE = frozenset({
 
 
 def _order_of(question: str, default: int = 1) -> int:
-    q = question.lower()
-    for word, n in _ORDER_WORDS.items():
-        if word in q:
+    q = fold_turkmen(question).lower()
+    for word, n in sorted(_ORDER_WORDS.items(), key=lambda item: -item[1]):
+        if re.search(rf"\b{word}\b", q):
             return n
     match = re.search(r"(\d+)\s*(?:unc?u|inc?i|nc[uüiı])(?:\s*mertebeden)?\s*(?:turev|türev)", q)
     if match:
@@ -68,7 +71,7 @@ def _bounds(question: str) -> tuple[sp.Basic, sp.Basic, str] | None:
     def to_bound(raw: str) -> sp.Basic | None:
         return sp.Rational(raw) if is_number(raw) else try_sympify(raw)
 
-    for pattern in (_DEF_SYM, _DEF_EN, _DEF_TR):
+    for pattern in (_DEF_SYM, _DEF_EN, _DEF_TR, _DEF_ARROW):
         match = pattern.search(question)
         if match:
             lower = sp.Rational(match.group(1)) if is_number(match.group(1)) else try_sympify(match.group(1))
@@ -132,12 +135,45 @@ class CalculusSolver(Solver):
     title = "Kalkülüs"
 
     def can_handle(self, question: str) -> float:
-        return self._score(fold_turkmen(question).lower(), strong=_KW_STRONG, weak=_KW_WEAK)
+        q = fold_turkmen(question).lower()
+        if re.search(r"[fgyh]\s*['′]\s*\(\s*[a-z]\s*\)", q):
+            if re.search(r"[fgyh]\s*\(\s*[a-z]\s*\)\s*=", q):
+                return 0.85
+            return 0.7
+        if re.search(r"\(\s*[^()]+?\s*\)\s*['′]", q):
+            return 0.85
+        if re.search(r"\bsum\s+[a-z]\s*=|\bsumm|\bsum\s+[a-z]\s+[-\d]|\u03a3\s*_", q):
+            return 0.85
+        return self._score(q, strong=_KW_STRONG, weak=_KW_WEAK)
 
     def solve(self, question: str) -> Solution:
         q = fold_turkmen(question).lower()
-        if re.search(r"türev|turev|derivative|d/dx|hosylay|ikinji|onumi|önümi|differensial|diferensial|diferensiyal", q):
-            return self._derivative(question, differential=bool(re.search(r"differensial|diferensial|diferensiyal", q)))
+        prime_postfix = re.search(r"\(\s*([^()]+?)\s*\)\s*['′]", q)
+        if prime_postfix and not re.search(r"integral|limit|\blimb|\bsin|\bcos", q):
+            return self._derivative(
+                question[:prime_postfix.start()] + " turev " + prime_postfix.group(1) + " "
+                + question[prime_postfix.end():])
+        if re.search(r"[fgy]\s*['′]\s*\(\s*[a-z]\s*\)", q) and re.search(r"[fgy]\s*\(\s*[a-z]\s*\)\s*=", q):
+            return self._derivative(re.sub(r"[fgy]\s*['′]\s*\([^)]*\)", " ", question))
+        normalized = re.sub(
+            r"\b(summation|sum)\s+([a-zA-Z])\s*=?\s*([\-\w.]+)\s+(?:to\s+)?([\-\w.]+)\s+(?:of\s+)?(.+)",
+            r"sum \2=\3 to \4 of \5", question, flags=re.IGNORECASE)
+        sum_match = re.search(
+            r"\bsum\s+([a-zA-Z])\s*=\s*([\-\w.]+)\s+to\s+([\-\w.]+)\s+(?:of\s+)?(.+)",
+            normalized, re.IGNORECASE)
+        if sum_match:
+            return self._finite_sum(question, sum_match)
+        if re.search(r"\bsummation\b", q):
+            raise NoSolverFound(
+                "Sonsuz toplam istegi anlasilamadi; ornek: 'sum k=1 to 10 of k^2'.")
+        if "summa" in q or "Σ" in q:
+            return self._series(question)
+        if re.search(r"türev|turev|derivative|d/dx|hosylay|ikinji|onum|differensial|diferensial|diferensiyal|diferansiyel", q):
+            return self._derivative(
+                question,
+                differential=bool(re.search(
+                    r"differensial|diferensial|diferensiyal|diferansiyel", q)),
+            )
         if re.search(r"integral|∫", q):
             return self._integral(question)
         if re.search(r"limit|lim\b|sınır\b|sinir\b|yaklaş|yaklas|\bçak\b|\bcak\b|\bçek\b|\bcek\b", q):
@@ -146,7 +182,8 @@ class CalculusSolver(Solver):
             return self._series(question)
         raise ValueError("Kalkülüs alt problemi belirlenemedi.")
 
-    def _solution(self, question: str, result, steps: list[Step], title: str) -> Solution:
+    def _solution(self, question: str, result, steps: list[Step], title: str,
+                  data: dict | None = None) -> Solution:
         return Solution(
             question=question,
             solver=self.name,
@@ -155,6 +192,7 @@ class CalculusSolver(Solver):
             result_tex=to_latex(result),
             result_text=to_text(result),
             steps=steps,
+            data=data or {},
         )
 
     def _derivative(self, question: str, differential: bool = False) -> Solution:
@@ -210,7 +248,10 @@ class CalculusSolver(Solver):
             result = result * dx
         steps.append(Step("Sonuç", content=result))
         title = "Diferensiyal" if differential else ("Türev" if order == 1 else f"{order}. mertebeden türev")
-        return self._solution(question, result, steps, title)
+        return self._solution(question, result, steps, title, data={
+            "kind": "derivative", "expr": expr, "var": var,
+            "order": order, "result": result,
+        })
 
     def _integral(self, question: str) -> Solution:
         question = re.sub(r"\b(?:y|f|g)\s*\(\s*([a-z])\s*\)\s*=\s*", " ", question, flags=re.IGNORECASE)
@@ -221,7 +262,8 @@ class CalculusSolver(Solver):
             q = q.replace(bounds[2], " ")
         q = re.sub(r"∫", " ", q)
         q = re.sub(r"\bdx\s*/", "1/", q)
-        q = re.sub(r"\b(?:from|up\s*to|to)\b", " ", q, flags=re.IGNORECASE)
+        q = re.sub(r"\bdx\b", " ", q)
+        q = re.sub(r"\b(?:from|up\s*to|to|cenli|çenli)\b", " ", q, flags=re.IGNORECASE)
         candidate = extract_expression(q, extra_noise=_NOISE)
         expr = try_sympify(candidate)
         if expr is None:
@@ -278,7 +320,15 @@ class CalculusSolver(Solver):
         else:
             result = sp.integrate(expr, var)
         steps.append(Step("Sonuç", content=result))
-        return self._solution(question, result, steps, "Belirli integral" if bounds else "Belirsiz integral")
+        return self._solution(
+            question, result, steps,
+            "Belirli integral" if bounds else "Belirsiz integral",
+            data={
+                "kind": "integral", "expr": expr, "var": var,
+                "bounds": (bounds[0], bounds[1]) if bounds else None,
+                "result": result,
+            },
+        )
 
     def _limit(self, question: str) -> Solution:
         steps: list[Step] = []
@@ -324,7 +374,25 @@ class CalculusSolver(Solver):
                                       steps, "Limit (yok)")
             result = left
         steps.append(Step("Sonuç", content=result))
-        return self._solution(question, result, steps, "Limit")
+        return self._solution(question, result, steps, "Limit", data={
+            "kind": "limit", "expr": expr, "var": var,
+            "point": value, "direction": direction, "result": result,
+        })
+
+    def _finite_sum(self, question: str, match) -> Solution:
+        steps: list[Step] = []
+        var_name, lo_raw, hi_raw, body_raw = match.groups()
+        var = sp.Symbol(var_name.lower())
+        lo = sp.Rational(lo_raw) if is_number(lo_raw) else try_sympify(lo_raw)
+        hi = sp.Rational(hi_raw) if is_number(hi_raw) else try_sympify(hi_raw)
+        body = try_sympify(body_raw)
+        if body is None or lo is None or hi is None:
+            raise ValueError("Toplam sinirlari veya terimi ayristirilamadi.")
+        steps.append(Step("Genel terim", content=body,
+                          detail=f"{var.name} = {lo} ... {hi}"))
+        result = sp.summation(body, (var, lo, hi))
+        steps.append(Step("Sonuc", content=result))
+        return self._solution(question, result, steps, "Sonlu toplam (sum)")
 
     def _series(self, question: str) -> Solution:
         steps: list[Step] = []

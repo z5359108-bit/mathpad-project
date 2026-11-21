@@ -9,6 +9,10 @@ from typing import Any
 from ..utils import fold_turkmen
 
 
+class NoSolverFound(Exception):
+    """Hiçbir çözücü soruyu işleyemiyor."""
+
+
 @dataclass
 class Step:
     """Çözüm adımı: başlık + içerik (sympy ifadesi, metin veya hazır LaTeX)."""
@@ -30,6 +34,7 @@ class Solution:
     result_tex: str
     result_text: str
     steps: list[Step] = field(default_factory=list)
+    data: dict = field(default_factory=dict)
 
 
 class Solver(ABC):

@@ -27,14 +27,14 @@ class DefterModeTests(unittest.TestCase):
     # ------------------------------------------------------------- soru tipleri
     def test_denklem(self):
         out = self._out("3x^2-7x+2=0")
-        self.assertIn("\\frac{1}{3}", out)
-        self.assertIn("\\Delta", out)
+        self.assertIn("1/3", out)
+        self.assertIn("Δ", out)
         self.assertNotIn("\\approx", out)
         self.assertNotIn("≈", out)
 
     def test_esitsizlik(self):
         out = self._out("|x-4|<3")
-        self.assertIn("\\left(1, 7\\right)", out)
+        self.assertIn("(1, 7)", out)
         self.assertNotIn("\\approx", out)
 
     def test_limit(self):
@@ -50,20 +50,21 @@ class DefterModeTests(unittest.TestCase):
 
     def test_integral(self):
         out = self._out("integral of 1/(5x+1) from 0 to 1")
-        self.assertIn("\\frac{1}{5}\\ln 6", out)
+        self.assertIn("(1/5)ln 6", out)
         self.assertNotIn("\\log", out)
         self.assertNotIn("\\approx", out)
 
     def test_alan(self):
         out = self._out("y=x^2, y=x+2 sinirli alan")
-        self.assertIn("\\frac{9}{2}", out)
+        self.assertIn("9/2", out)
         self.assertNotIn("\\Rightarrow", out.splitlines()[-1])
+        self.assertNotIn("\\", out)
 
     def test_diferensial(self):
         final = self._final("f(x)=x^2*sin(x) diferensialyny tapyn")
-        self.assertTrue(final.startswith("df = "))
-        self.assertTrue(final.endswith("\\,dx"))
-        self.assertNotIn("dx ", final[len("df = "):-len("\\,dx")])
+        self.assertTrue(final.startswith("df = ("), final)
+        self.assertTrue(final.endswith(") dx"), final)
+        self.assertNotIn("dx ", final)
 
     def test_ekstremum(self):
         final = self._final("f(x)=x^3-6x^2+9x-1 ekstremum")
@@ -79,8 +80,8 @@ class DefterModeTests(unittest.TestCase):
     # --------------------------------------------------- biçim kuralları
     def test_polynomial_answer_expanded(self):
         final = self._final("f(x)=x^4-4x^2 ikinji önüm")
-        self.assertIn("12 x^{2} - 8", final)
-        self.assertNotIn("3 x^{2} - 2", final)
+        self.assertIn("12 x² - 8", final)
+        self.assertNotIn("3 x² - 2", final)
 
     def test_factor_request_keeps_factored(self):
         out = self._out("x^4-16 çarpanlarına ayır")
@@ -100,6 +101,23 @@ class DefterModeTests(unittest.TestCase):
         out = self._out("log_2(x)=x-3")
         self.assertNotIn("\\approx", out)
         self.assertNotIn("≈", out)
+
+    def test_no_raw_latex_commands_anywhere(self):
+        import re
+
+        pattern = re.compile(r"\\[A-Za-z]")
+        questions = [
+            "3x^2-7x+2=0", "|x-4|<3", "lim x->0 1/x", "d/dx x*sin(x)",
+            "integral of 1/(5x+1) from 0 to 1", "y=x^2, y=x+2 sinirli alan",
+            "f(x)=x^2*sin(x) diferensialyny tapyn", "f(x)=x^3-6x^2+9x-1 ekstremum",
+            "y=x^3-x egrisine x0=2 teget", "x^2-3x+2=0", "cos(2x)=0",
+        ]
+        for q in questions:
+            try:
+                out = self.pad.defter(q)
+            except Exception:  # noqa: BLE001
+                continue
+            self.assertIsNone(pattern.search(out), f"{q}: {out!r}")
 
     def test_cli_flag_exists(self):
         from mathpad.cli import build_parser
@@ -154,7 +172,9 @@ class DefterKucukDuzeltmeler(unittest.TestCase):
         from mathpad.rendering.defter import defter_metni
 
         out = defter_metni(MathPad().ask("x^2<0"))
-        self.assertEqual(out.count("\\varnothing") + out.count("\\emptyset"), 1)
+        self.assertEqual(out.count("∅"), 1)
+        self.assertNotIn("\\varnothing", out)
+        self.assertNotIn("\\emptyset", out)
 
 
 class DefterPngTests(unittest.TestCase):

@@ -74,6 +74,11 @@ def _function_of(question: str):
         candidates.append(match.group(2))
     for match in re.finditer(r"\by\s*=\s*([^,;.]+)", normalize(question)):
         candidates.append(match.group(1))
+    for match in re.finditer(r"(?:^|,|;)\s*[fy]\s*=\s*([^,;.\[\]]+)", normalize(question)):
+        candidates.append(match.group(1))
+    interval_head = re.match(r"\s*([^,;\[\]]+?)\s*[\[(]\s*-?\d", normalize(question))
+    if interval_head:
+        candidates.append(interval_head.group(1))
     for raw in reversed(candidates):
         expr = _lenient_expr(raw)
         if expr is not None and expr.free_symbols:

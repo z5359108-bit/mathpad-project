@@ -1,4 +1,4 @@
-from .base import Solution, Step, Solver
+from .base import NoSolverFound, Solution, Step, Solver
 from .arithmetic import ArithmeticSolver
 from .algebra import AlgebraSolver
 from .advanced_algebra import AdvancedAlgebraSolver
@@ -20,6 +20,7 @@ DEFAULT_SOLVERS = (
 )
 
 __all__ = [
+    "NoSolverFound",
     "Solver",
     "Solution",
     "Step",

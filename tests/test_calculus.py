@@ -89,6 +89,30 @@ class TestCalculus(unittest.TestCase):
         solution = self.engine.ask("taylor series of cos(x)")
         self.assertEqual(solution.solver, "calculus")
 
+    def test_finite_sum_canonical(self):
+        solution = self.engine.ask("sum k=1 to 10 of k^2")
+        self.assertEqual(solution.solver, "calculus")
+        self.assertEqual(solution.result, 385)
+
+    def test_finite_sum_word_no_to(self):
+        solution = self.engine.ask("summation k 1 10 k^2")
+        self.assertEqual(solution.solver, "calculus")
+        self.assertEqual(solution.result, 385)
+
+    def test_finite_sum_bare_keyword(self):
+        solution = self.engine.ask("sum k 1 10 k^2")
+        self.assertEqual(solution.solver, "calculus")
+        self.assertEqual(solution.result, 385)
+
+    def test_sum_list_still_statistics(self):
+        solution = self.engine.ask("sum of [1,2,3,4]")
+        self.assertEqual(solution.solver, "statistics")
+        self.assertEqual(solution.result, 10.0)
+
+    def test_extract_equations_rejects_non_basic(self):
+        from mathpad.solvers.algebra import _extract_equations
+        self.assertEqual(_extract_equations("sum k 1 10 k^2"), [])
+
 
 if __name__ == "__main__":
     unittest.main()

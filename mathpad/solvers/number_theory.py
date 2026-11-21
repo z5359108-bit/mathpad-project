@@ -32,16 +32,16 @@ class NumberTheorySolver(Solver):
             return 0.0
         if _COMB.search(q) or _PERM.search(q) or _MOD.search(q):
             return 0.9
-        if re.search(r"ebob|obeb|gcd|ekok|okek|lcm|asal|prime|kombinasyon|permutasyon|carpanla|factoriz|bolegi|boluji", q):
+        if re.search(r"ebob|obeb|gcd|ekok|okek|lcm|\bnok\b|asal|prime|kombinasyon|permutasyon|carpanla|factoriz|bolegi|boluji", q):
             return 0.85
         return self._score(q, strong=_KW_STRONG, weak=_KW_WEAK)
 
     def solve(self, question: str) -> Solution:
         q = fold_turkmen(question).lower()
-        if re.search(r"ebob|obeb|gcd", q):
+        if re.search(r"ebob|obeb|gcd|n[oa]b\b", q):
             numbers = self._ints(question, min_count=2)
             return self._gcd(numbers, question)
-        if re.search(r"ekok|okek|lcm", q):
+        if re.search(r"ekok|okek|lcm|nok\b", q):
             numbers = self._ints(question, min_count=2)
             return self._lcm(numbers, question)
         if re.search(r"asal m[iı]|asalmi|is\s*prime|prime\?|asallik|asallık", q):

@@ -37,6 +37,8 @@ class StatisticsSolver(Solver):
             r"funksi\w*|fonksi\w*|aral[iı][ğg]|aralik|interval|noktas|turev|türev|integral|ekstremum|te[gğ]et|f\s*\(", q
         ):
             return 0.0
+        if re.search(r"\^\s*\d", question):
+            return 0.0
         if re.search(r"[a-zA-Z_]{3,}\s*\(", question) and not re.search(
             r"sqrt|sin|cos|tan|log|ln|exp|abs|arcsin|arccos|min\(|max\(", question
         ):

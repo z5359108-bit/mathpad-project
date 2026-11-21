@@ -376,17 +376,17 @@ class AdvancedAlgebraSolver(Solver):
                 steps.append(Step("Sınırlar",
                                   latex=rf"{_L(inner)} = ±{_L(c)} \\Rightarrow {_L(var)} = {_L(x1[0])}, \; {_L(x2[0])}"))
         else:
+            eq_char = "\\leq" if closed else "<"
             steps.append(Step("Mutlak değer eşitsizliğinin tanımı",
-                              latex=rf"|f| {{ {rel} }} c \\Leftrightarrow f {{ {rel} }} c \\;\\text{{veya}}\\; f {{ {rel} }} -c",
+                              latex=rf"|f| {{ {rel} }} c \\Leftrightarrow f {{ {rel} }} c \\;\\text{{veya}}\\; f {{ {eq_char} }} -c",
                               detail="mutlak değer c'yi aşar veya −c'nin altına inerse koşul sağlanır"))
             x1 = sp.solve(sp.Eq(inner, -c), var)
             x2 = sp.solve(sp.Eq(inner, c), var)
             if x1 and x2:
-                eq_char = "\\leq" if closed else "<"
                 steps.append(Step(f"Durum 1: {_L(inner)} {rel} {_L(c)}",
                                   latex=rf"{_L(inner)} {{ {rel} }} {_L(c)} \\Rightarrow {_L(var)} {{ {rel} }} {_L(x2[0])}"))
-                steps.append(Step(f"Durum 2: {_L(inner)} {rel} -{_L(c)}",
-                                  latex=rf"{_L(inner)} {{ {rel} }} -{_L(c)} \\Rightarrow {_L(var)} {{ {eq_char} }} {_L(x1[0])}"))
+                steps.append(Step(f"Durum 2: {_L(inner)} {eq_char} -{_L(c)}",
+                                  latex=rf"{_L(inner)} {{ {eq_char} }} -{_L(c)} \\Rightarrow {_L(var)} {{ {eq_char} }} {_L(x1[0])}"))
                 steps.append(Step("Birleşim",
                                   detail="iki durumun aralıkları birleşim kümesi alınır"))
             result = sp.solve_univariate_inequality(
@@ -450,7 +450,7 @@ class AdvancedAlgebraSolver(Solver):
                 valid.append(sol)
             else:
                 steps.append(Step("Geçersiz kök elenir",
-                                  latex=rf"{_L(var)} = {_L(sol.get(var))}",
+                                  latex=rf"{_L(var)} = {_L(sol.get(var))} \Rightarrow \text{{logaritma tanım dışı (eler)}}",
                                   detail="her logaritmanın argümanı pozitif olmalıdır"))
         if valid:
             steps.append(Step("Çözüm",
@@ -580,6 +580,7 @@ class AdvancedAlgebraSolver(Solver):
     def _progression_data(self, question: str):
         q = _norm(question)
         kind_word = bool(re.search(r"progressi|arifmetik|aritmetik|geometrik", q))
+        bare = False
         values: dict = {}
         for match in _ASSIGN_RE.finditer(q):
             letter = match.group(1)
@@ -601,8 +602,14 @@ class AdvancedAlgebraSolver(Solver):
                 " ", leftovers)
             fallback = re.search(r"\b([sabdq])\s*_?\s*(\d+)\b", leftovers)
             if fallback is None:
-                return None
-            wanted = (fallback.group(1).lower(), int(fallback.group(2)))
+                seed_arith = values.get("a1") is not None and values.get("d") is not None
+                seed_geom = values.get("b1") is not None and values.get("q") is not None
+                if not (seed_arith or seed_geom):
+                    return None
+                bare = True
+                wanted = ("b", 6) if (seed_geom and not seed_arith) else ("a", 20)
+            else:
+                wanted = (fallback.group(1).lower(), int(fallback.group(2)))
         if not kind_word and not values:
             return None
         if re.search(r"geometrik", q):
@@ -611,7 +618,7 @@ class AdvancedAlgebraSolver(Solver):
             kind = "arithmetic"
         else:
             kind = "geometric" if "q" in values or wanted[0] == "b" else "arithmetic"
-        return {"kind": kind, "values": values, "wanted": wanted}
+        return {"kind": kind, "values": values, "wanted": wanted, "bare": bare}
 
     def _solve_progression(self, question: str, data) -> Solution:
         steps: list[Step] = []
@@ -844,8 +851,9 @@ class AdvancedAlgebraSolver(Solver):
         steps: list[Step] = []
         var, poly, c = data["var"], data["poly"], data["c"]
         result = sp.rem(sp.Poly(poly, var), sp.Poly(var - c, var)).as_expr()
+        divisor = f"{_L(var)} - {_L(c)}" if c >= 0 else f"{_L(var)} + {_L(-c)}"
         steps.append(Step("Kalan teoremi",
-                          latex=rf"P(x) : ({_L(var)} - {_L(c)}) \text{{ ile bölünürse kalan }} = P({_L(c)})"))
+                          latex=rf"P(x) : ({divisor}) \text{{ ile bölünürse kalan }} = P({_L(c)})"))
         vals = [sp.together(t.subs(var, c)) for t in poly.as_ordered_terms()]
         signed = _L(vals[0])
         for v in vals[1:]:
@@ -888,8 +896,14 @@ class AdvancedAlgebraSolver(Solver):
             coeff = sp.binomial(n, k)
             term = sp.expand(coeff * a**(n - k) * (b**k if b is not None else 1) if b is not None else coeff * a**(n - k))
             terms.append(term)
-        steps.append(Step("Terimler",
-                          latex=" + ".join(_L(t) if not t.could_extract_minus_sign() else f"({_L(t)})" for t in terms)))
+        term_latex = _L(terms[0]) if not terms[0].could_extract_minus_sign() \
+            else f"- {_L(-terms[0])}"
+        for t in terms[1:]:
+            if t.could_extract_minus_sign():
+                term_latex += f" - {_L(-t)}"
+            else:
+                term_latex += f" + {_L(t)}"
+        steps.append(Step("Terimler", latex=term_latex))
         result = sp.expand(base**n)
         steps.append(Step("Sadeleştirilmiş açılım", content=result))
         return self._solution(question, result, steps, "Binom açılımı")

@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from .solvers import DEFAULT_SOLVERS, Solution, Solver
+from .solvers import DEFAULT_SOLVERS, NoSolverFound, Solution, Solver
+from .verify import VerificationError, verify_solution
 
-
-class NoSolverFound(Exception):
-    """Hiçbir çözücü soruyu işleyemiyor."""
 
 
 class SolverError(Exception):
@@ -53,9 +51,14 @@ class MathPad:
                 break
             try:
                 solution = solver.solve(question)
+                verify_solution(solution)
                 break
             except NoSolverFound as exc:
                 last_error = exc
+                continue
+            except VerificationError as exc:
+                last_error = SolverError(
+                    f"{solver.name} sonucu doğrulanamadı: {exc}")
                 continue
             except Exception as exc:
                 last_error = SolverError(f"{solver.name} çözücüsü hata verdi: {exc}")
