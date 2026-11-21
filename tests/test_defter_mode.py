@@ -5,6 +5,9 @@ ders kitabi biciminde (4(3x^2-2) -> 12x^2-8, log(6)/5 -> (1/5)ln 6,
 df = (...)dx, i yerine ⅈ yok, zoo/nan yerine sozle sonuc).
 """
 
+import os
+import shutil
+import tempfile
 import unittest
 
 from mathpad import MathPad
@@ -152,3 +155,34 @@ class DefterKucukDuzeltmeler(unittest.TestCase):
 
         out = defter_metni(MathPad().ask("x^2<0"))
         self.assertEqual(out.count("\\varnothing") + out.count("\\emptyset"), 1)
+
+
+class DefterPngTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_defter_to_png_yazar(self):
+        from mathpad.rendering.png import defter_to_png
+
+        path = defter_to_png(MathPad().ask("3x^2-7x+2=0"), os.path.join(self.tmp, "d.png"))
+        self.assertTrue(os.path.isfile(path) and os.path.getsize(path) > 1000)
+
+    def test_menu_resim_uret_defter(self):
+        import mathpad_menu
+
+        m = mathpad_menu.App.__new__(mathpad_menu.App)
+        from mathpad.settings import Settings
+
+        m.ayar = Settings(png_klasor=self.tmp, dpi=120)
+        m.engine = MathPad()
+        m.png_sayac = 0
+        path = m._resim_uret(m.engine.ask("|2x+1|>=5"), "defter", defter=True)
+        self.assertTrue(path and os.path.isfile(path) and os.path.getsize(path) > 1000)
+
+    def test_zincirde_ok_komutu_yok(self):
+        out = MathPad().defter("f(x)=x^3-6x^2+9x-1 ekstremum")
+        self.assertNotIn("\\Rightarrow", out)
+        self.assertIn("\u21d2", out)

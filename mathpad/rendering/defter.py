@@ -77,11 +77,26 @@ _DOUBLE_CMD = re.compile(r"\\{2,}([A-Za-z;,.]+)")
 _REL_BRACE = re.compile(r"\{\s*(<=|>=|<|>|=|\\leq|\\geq)\s*\}")
 
 
+_SOFT_SUBS = (
+    ("\\Rightarrow", "\u21d2"),
+    ("\\Leftrightarrow", "\u21d4"),
+    ("\\quad", "  "),
+    ("\\qquad", "  "),
+    ("\\;", " "),
+)
+
+
+def _soft_plain(text: str) -> str:
+    for token, replacement in _SOFT_SUBS:
+        text = text.replace(token, replacement)
+    return text
+
+
 def _clean_latex(text: str) -> str:
     text = _DOUBLE_CMD.sub(r"\\\1", text)
     text = _REL_BRACE.sub(r" \1 ", text)
     text = _ln_form(_i_fix(text))
-    return text
+    return _soft_plain(text)
 
 
 def _wants_factors(solution: Solution) -> bool:

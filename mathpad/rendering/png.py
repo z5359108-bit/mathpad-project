@@ -91,3 +91,36 @@ def save_solution_png(solution, folder: str, index: int, prefix: str = "soru") -
     os.makedirs(folder, exist_ok=True)
     path = os.path.join(folder, f"{prefix}_{index:03d}.png")
     return solution_to_png(solution, path)
+
+
+def defter_to_png(solution, path: str, dpi: int = 160) -> str:
+    """Defter zincirini (kısa satırlar) tek bir PNG dosyasına yazar."""
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    from .defter import defter_satirlar
+
+    plt.rcParams["font.family"] = "DejaVu Sans"
+
+    rows: list[tuple[str, str]] = [("title", f"Soru: {solution.question}")]
+    for line in defter_satirlar(solution):
+        rows.append(("math", line))
+
+    fig = plt.figure(figsize=(9.0, max(2.0, 0.6 * len(rows) + 0.6)))
+    fig.patch.set_facecolor("white")
+
+    y = 0.95
+    for kind, text in rows:
+        if kind == "title":
+            fig.text(0.06, y, text, fontsize=12, fontweight="bold", va="top", wrap=True)
+            y -= 0.1
+        else:
+            _render_math(fig, text, 0.09, y)
+            y -= 0.09
+
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    fig.savefig(path, dpi=dpi, bbox_inches="tight", pad_inches=0.25, facecolor="white")
+    plt.close(fig)
+    return path
