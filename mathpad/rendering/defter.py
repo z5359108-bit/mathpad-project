@@ -64,7 +64,13 @@ def _i_fix(text: str) -> str:
 
 
 def _ln_form(text: str) -> str:
-    return _FRAC_LN.sub(r"\\frac{1}{\2}\\ln \1", text)
+    def repl(m):
+        arg = m.group(1).strip()
+        if "+" in arg or "-" in arg or " " in arg:
+            arg = r"\left(" + arg + r"\right)"
+        return r"\frac{1}{" + m.group(2) + r"}\ln " + arg
+
+    return _FRAC_LN.sub(repl, text)
 
 
 _DOUBLE_CMD = re.compile(r"\\{2,}([A-Za-z;,.]+)")
