@@ -38,15 +38,21 @@ class App:
 
     # ---------- soru çözme ----------
 
-    def _resim_uret(self, solution, ad: str) -> str | None:
+    def _resim_uret(self, solution, ad: str, defter: bool = False) -> str | None:
         try:
             from mathpad.rendering.png import solution_to_png
-
+            if defter:
+                from mathpad.rendering.png import defter_to_png as uret
+            else:
+                uret = solution_to_png
             klasor = os.path.join(BASE, self.ayar.png_klasor)
             self.png_sayac += 1
             path = os.path.join(klasor, f"{ad}_{self.png_sayac:03d}.png")
-            solution_to_png(solution, path, dpi=self.ayar.dpi)
+            uret(solution, path, dpi=self.ayar.dpi)
             return path
+        except ImportError:
+            print("(resim üretilemedi: matplotlib kurulu değil — Pydroid'de Pip sekmesinden 'matplotlib' kur)")
+            return None
         except Exception as exc:
             print(f"(resim üretilemedi: {exc})")
             return None
@@ -106,7 +112,17 @@ class App:
                 solution = self.engine.ask(question)
                 self.notebook.add(solution)
                 print()
-                print(defter_metni(solution))
+                mode = self.ayar.cikti
+                if mode == "png":
+                    path = self._resim_uret(solution, "defter", defter=True)
+                    if path:
+                        print(f"📷 Defter resmi: {path}")
+                else:
+                    print(defter_metni(solution))
+                    if mode == "ikisi":
+                        path = self._resim_uret(solution, "defter", defter=True)
+                        if path:
+                            print(f"📷 Ayrıca defter resmi: {path}")
             except (NoSolverFound, SolverError, ValueError) as exc:
                 print(f"hata: {exc}")
 
@@ -175,7 +191,7 @@ class App:
         for i, solution in enumerate(self.notebook.solutions, 1):
             path = os.path.join(klasor, f"defter_{i:03d}.png")
             try:
-                solution_to_png(solution, path, dpi=self.ayar.dpi)
+                uret(solution, path, dpi=self.ayar.dpi)
                 print(f"📷 {path}")
             except Exception as exc:
                 print(f"(üretilemedi {path}: {exc})")
