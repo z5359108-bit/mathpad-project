@@ -111,28 +111,35 @@ if __name__ == "__main__":
 
 
 class DefterMenuTests(unittest.TestCase):
-    def test_output_mode_defter_accepted(self):
-        from mathpad.settings import OUTPUT_MODES, Settings
-
-        self.assertIn("defter", OUTPUT_MODES)
-        s = Settings(cikti="defter")
-        s.gecerli()
-        self.assertEqual(s.cikti, "defter")
-        self.assertTrue(s.defter_etkin)
-        self.assertFalse(s.latex_etkin)
-
-    def test_menu_defter_output(self):
-        import io
-        import contextlib
+    def _app(self):
         import mathpad_menu
 
         m = mathpad_menu.App.__new__(mathpad_menu.App)
-        m.ayar = __import__("mathpad.settings", fromlist=["Settings"]).Settings(cikti="defter")
+        m.ayar = __import__("mathpad.settings", fromlist=["Settings"]).Settings()
         m.engine = mathpad_menu.MathPad()
-        sol = m.engine.ask("3x^2-7x+2=0")
+        m.notebook = mathpad_menu.Notebook(title="t")
+        return m
+
+    def test_output_mode_defter_accepted(self):
+        from mathpad.settings import OUTPUT_MODES, Settings
+
+        self.assertNotIn("defter", OUTPUT_MODES)
+        s = Settings(cikti="defter")
+        s.gecerli()
+        self.assertEqual(s.cikti, "latex")
+
+    def test_menu_defter_output(self):
+        import contextlib
+        import io
+        from unittest import mock
+
+        m = self._app()
         buf = io.StringIO()
-        with contextlib.redirect_stdout(buf):
-            m._cozum_goster(sol)
+        with mock.patch("builtins.input", side_effect=["3x^2-7x+2=0", "menu"]):
+            with contextlib.redirect_stdout(buf):
+                m.defter_modu()
         out = buf.getvalue()
         self.assertIn("[Denklem çözümü]", out)
         self.assertNotIn("$$", out)
+
+

@@ -56,11 +56,7 @@ class App:
         from mathpad.cli import _print_latex, _print_solution
 
         mode = self.ayar.cikti
-        if mode == "defter":
-            from mathpad.rendering.defter import defter_metni
-
-            print(defter_metni(solution))
-        elif mode == "pretty":
+        if mode == "pretty":
             _print_solution(solution)
         elif mode == "png":
             path = self._resim_uret(solution, "soru")
@@ -89,6 +85,30 @@ class App:
             print("Çözüm defterine eklendi. (Menü 3'ten defteri kaydedebilirsin)")
         except (NoSolverFound, SolverError, ValueError) as exc:
             print(f"hata: {exc}")
+
+    def defter_modu(self) -> None:
+        _cizgi()
+        print("Defter modu: kısa ders kitabı zinciri (açıklama/ondalık yok). 'menu' ile dön.")
+        _cizgi()
+        from mathpad.rendering.defter import defter_metni
+
+        while True:
+            try:
+                question = input("soru> ").strip()
+            except (EOFError, KeyboardInterrupt):
+                print()
+                break
+            if not question:
+                continue
+            if question.lower() in EXIT_WORDS or question.lower() == "menu":
+                break
+            try:
+                solution = self.engine.ask(question)
+                self.notebook.add(solution)
+                print()
+                print(defter_metni(solution))
+            except (NoSolverFound, SolverError, ValueError) as exc:
+                print(f"hata: {exc}")
 
     def serbest_mod(self) -> None:
         _cizgi()
@@ -208,9 +228,8 @@ class App:
         print("  2) png    — formülleri çizilmiş resim (defterime bakarak yazacağım)")
         print("  3) ikisi  — LaTeX + resim")
         print("  4) pretty — terminalde okunabilir unicode (derste değil, hızlı bakış)")
-        print("  5) defter \u2014 k\u0131sa ders kitab\u0131 zinciri (a\u00e7\u0131klama/ondal\u0131k yok)")
         secim = input("seçim> ").strip()
-        haritalar = {"1": "latex", "2": "png", "3": "ikisi", "4": "pretty", "5": "defter"}
+        haritalar = {"1": "latex", "2": "png", "3": "ikisi", "4": "pretty",}
         if secim in haritalar:
             self.ayar.cikti = haritalar[secim]
             self._kaydet()
@@ -295,10 +314,11 @@ class App:
             _cizgi()
             print("  1) Soru çöz")
             print("  2) Serbest mod (art arda soru)")
-            print("  3) Defterim (kaydet / listele / PNG döktür)")
-            print("  4) Ayarlar (çıktı biçimi, PNG kalitesi…)")
-            print("  5) Örnek sorular")
-            print("  6) Çözücüleri listele")
+            print("  3) Defter modu (kısa zincir: açıklama/ondalık yok)")
+            print("  4) Defterim (kaydet / listele / PNG döktür)")
+            print("  5) Ayarlar (çıktı biçimi, PNG kalitesi…)")
+            print("  6) Örnek sorular")
+            print("  7) Çözücüleri listele")
             print("  0) Çıkış (oturumu deftere kaydeder)")
             try:
                 secim = input("seçim> ").strip()
@@ -310,12 +330,14 @@ class App:
             elif secim == "2":
                 self.serbest_mod()
             elif secim == "3":
-                self.defter_menu()
+                self.defter_modu()
             elif secim == "4":
-                self.ayarlar_menu()
+                self.defter_menu()
             elif secim == "5":
-                self.ornek_sorular()
+                self.ayarlar_menu()
             elif secim == "6":
+                self.ornek_sorular()
+            elif secim == "7":
                 self.cozuculeri_listele()
             elif secim == "0" or secim.lower() in EXIT_WORDS:
                 self.oturumu_kaydet()

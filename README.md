@@ -72,10 +72,11 @@ python mathpad_menu.py
 ```
   1) Soru çöz                  ← tek soru sor, cevabı ayarındaki biçimde al
   2) Serbest mod               ← art arda soru sor ('menu' ile dön)
-  3) Defterim                  ← .md/.html/.txt kaydet, PNG döktür, listele
-  4) Ayarlar                   ← çıktı biçimi (latex/png/ikisi/pretty/defter), DPI…
-  5) Örnek sorular             ← hazır sorulardan dene
-  6) Çözücüleri listele
+  3) Defter modu             ← kısa ders kitabı zinciri (açıklama/ondalık yok)
+  4) Defterim                  ← .md/.html/.txt kaydet, PNG döktür, listele
+  5) Ayarlar                   ← çıktı biçimi (latex/png/ikisi/pretty), DPI…
+  6) Örnek sorular             ← hazır sorulardan dene
+  7) Çözücüleri listele
   0) Çıkış                     ← oturumu otomatik deftere kaydeder
 ```
 
