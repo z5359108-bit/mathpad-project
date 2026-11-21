@@ -7,7 +7,7 @@ import os
 from dataclasses import asdict, dataclass, fields
 from typing import Any
 
-OUTPUT_MODES = ("latex", "png", "ikisi", "pretty")
+OUTPUT_MODES = ("latex", "png", "ikisi", "pretty", "defter")
 
 
 @dataclass
@@ -20,6 +20,10 @@ class Settings:
     @property
     def png_etkin(self) -> bool:
         return self.cikti in {"png", "ikisi"}
+
+    @property
+    def defter_etkin(self) -> bool:
+        return self.cikti == "defter"
 
     @property
     def latex_etkin(self) -> bool:

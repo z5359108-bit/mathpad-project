@@ -56,7 +56,11 @@ class App:
         from mathpad.cli import _print_latex, _print_solution
 
         mode = self.ayar.cikti
-        if mode == "pretty":
+        if mode == "defter":
+            from mathpad.rendering.defter import defter_metni
+
+            print(defter_metni(solution))
+        elif mode == "pretty":
             _print_solution(solution)
         elif mode == "png":
             path = self._resim_uret(solution, "soru")
@@ -204,8 +208,9 @@ class App:
         print("  2) png    — formülleri çizilmiş resim (defterime bakarak yazacağım)")
         print("  3) ikisi  — LaTeX + resim")
         print("  4) pretty — terminalde okunabilir unicode (derste değil, hızlı bakış)")
+        print("  5) defter \u2014 k\u0131sa ders kitab\u0131 zinciri (a\u00e7\u0131klama/ondal\u0131k yok)")
         secim = input("seçim> ").strip()
-        haritalar = {"1": "latex", "2": "png", "3": "ikisi", "4": "pretty"}
+        haritalar = {"1": "latex", "2": "png", "3": "ikisi", "4": "pretty", "5": "defter"}
         if secim in haritalar:
             self.ayar.cikti = haritalar[secim]
             self._kaydet()

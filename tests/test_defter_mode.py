@@ -108,3 +108,31 @@ class DefterModeTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DefterMenuTests(unittest.TestCase):
+    def test_output_mode_defter_accepted(self):
+        from mathpad.settings import OUTPUT_MODES, Settings
+
+        self.assertIn("defter", OUTPUT_MODES)
+        s = Settings(cikti="defter")
+        s.gecerli()
+        self.assertEqual(s.cikti, "defter")
+        self.assertTrue(s.defter_etkin)
+        self.assertFalse(s.latex_etkin)
+
+    def test_menu_defter_output(self):
+        import io
+        import contextlib
+        import mathpad_menu
+
+        m = mathpad_menu.App.__new__(mathpad_menu.App)
+        m.ayar = __import__("mathpad.settings", fromlist=["Settings"]).Settings(cikti="defter")
+        m.engine = mathpad_menu.MathPad()
+        sol = m.engine.ask("3x^2-7x+2=0")
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            m._cozum_goster(sol)
+        out = buf.getvalue()
+        self.assertIn("[Denklem çözümü]", out)
+        self.assertNotIn("$$", out)
