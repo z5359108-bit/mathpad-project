@@ -9,13 +9,15 @@ Yalnızca `sympy`'ye dayanır; tüm çözücüler eklenebilir/çıkarılabilir e
 | Alan | Yetenek |
 |---|---|
 | Aritmetik | işlemler, üs/kök, faktöriyel, yüzde (`%15'i 250`, `15% of 80`) |
-| Cebir | denklem çözümü (tekli/sistem), ikinci derece + diskriminant analizi, çarpanlara ayırma, açma, basitleştirme |
-| Kalkülüs | türev (N. mertebe), belirsiz/belirli integral (sınırlarda `e^2`, `pi/2`, `2pi`, `sqrt(2)`), limit (±∞ dahil), Taylor/Maclaurin serisi, toplam/seri (`sum 1/2^n n=1 to oo`) |
-| Lineer Cebir | determinant (Sarrus adımı), ters matris, özdeğer/özvektör, rank, iz, transpoze, matris çarpımı |
+| Cebir | denklem çözümü (tekli/sistem), ikinci derece + diskriminant analizi, çarpanlara ayırma, açma, basitleştirme, polinom bölme (`polinom bolme (x^3-1)/(x-1)` → bölüm+kalan), özdeşlik/boş küme örtüsü (`4x+2=4x+2` → ℝ, `x+1=x+2` → ∅) |
+| Kalkülüs | türev (N. mertebe), belirsiz/belirli integral (sınırlarda `e^2`, `pi/2`, `2pi`, `sqrt(2)`), limit (±∞ dahil), Taylor/Maclaurin serisi, toplam/seri (`sum 1/2^n n=1 to oo`, `sum n from 1 to 100`), `int ... dx` kısaltması |
+| Lineer Cebir | determinant (Sarrus adımı; kare olmayan matriste açık hata), ters matris, özdeğer/özvektör, rank, iz, transpoze, matris çarpımı |
 | İleri Cebir | eşitsizlikler (işaret tablosu, rasyonel), log/üstel **eşitsizlikler** (`log_2(x)<=3` → `(0; 8]`), `|2x-3|=7` mutlak değer (denklem + eşitsizlik), log/üstel denklemler (`log_2(x+3)=4`, `3^(x+1)=81`), köklü denklemler (`sqrt(x+5)=x-1` + amaçlı kontrol), arifmetik/geometrik progressiya, Vieta teoremi, özdeşlik uygulaması (`a²+b²=(a+b)²−2ab`), kalan teoremi, binom katsayısı, kompleks sayılar (`(1+2i)(3-i)`, `|3+4i|`) |
 | İleri Analiz | teğet denklemi, ekstremumlar (2. türev testi), kapalı aralıkta max/min, eğrilerle sınırlı alan, dönel cisim hacmi (`y=x^2 x=0..1` → `π/5`), kısmi integrasyon (`∫x·cosx`, `∫lnx`), yarı açı (`∫sin²x`), u-dönüşümü (`∫x·e^(x²)`), standart limitler (`(e^x−1)/x → 1`), `arctan/arcsin` türevleri |
 | Sayı Teorisi | EBOB/EKOK, asallık testi, asal çarpanlar, bölenler, modüler aritmetik, kombinasyon/permutasyon |
-| İstatistik | ortalama, medyan, mod, varyans, standart sapma, toplam, min/max, adet |
+| İstatistik | ortalama, medyan, mod, **varyans / standart sapma (popülasyon, n; ör. note'da n−1)**, toplam, min/max, adet |
+| Geometri | Pisagor/hipotenüs (`3 4 5 dik ucgen` → 5), daire-çember alan/çevre, kare/dikdörtgen/üçgen alan-çevre, küre hacim+yüzey, silindir hacim, küp hacim — π'li sonuçlara yaklaşık ondalık eklenir |
+| Sözel Problemler | x-bul tipi sayı problemleri (`bir sayının 3 katının 5 fazlası 20` → 5, yarısı, iki sayı toplam/fark) ve fonksiyon değerleri (`f(x)=3x+2, x=2` → 8) |
 | Okul Ekstra | ters trigonometrik değerler (`arcsin(1/2)` → `π/6`), `\|f\|=\|g\|` denklemleri, tanım kümesi (`√`, payda, log), ters fonksiyon (küçük `x³+2` dahil; `x²` için sesli hata), `f(g(x))` kompozisyonu, artan/azalan aralıklar, dönüm noktaları, polinom bölme (bölüm + kalan) |
 
 - **Türkçe / Türkmençe / İngilizce** soru dili: `x^2 - 3x + 2 = 0`, `deňlemäni çöz: 3x + 4 = 10`, `x^2 fonksiyoniniň hosylayyşyny al`, `derivative of exp(2*x)` — hepsi çalışır.
@@ -49,7 +51,9 @@ Yalnızca `sympy`'ye dayanır; tüm çözücüler eklenebilir/çıkarılabilir e
 │       ├── school_extra.py    # ters trig, |f|=|g|, tanım kümesi, ters fonksiyon,
 │       │                      # f(g(x)), artan/azalan, dönüm noktası, bölme
 │       ├── linear_algebra.py, number_theory.py, statistics.py
-├── tests/                   # birim testleri (330)
+│       ├── geometry.py         # alan/çevre/hacim/hipotenüs (defter adımlı)
+│       └── word_problems.py    # x-bul sözel problemleri + f(a) fonksiyon değeri
+├── tests/                   # birim testleri (388)
 │   └── test_defter_mode.py  # defter modu: soru tipi basina 1 test + kurallar
 ├── examples/                # demo çıktıları (defter.md, defter.html, defter.txt)
 ├── mathpad_menu.py          # menü tabanlı ana araç (başlat / ayarlar)
@@ -103,6 +107,9 @@ python -m mathpad --defter "3x^2-7x+2=0"
 
 # Terminalde okunabilir unicode çıktı istersen
 python -m mathpad --pretty "(2+3)*4"
+
+# Her argparse soruyu AYRI bir soru olarak çözer
+python -m mathpad.cli --text defter.txt "7!/5!" "dairenin alani r=3" "2x+6=0"
 
 # Çözücüleri listele / zorla seç
 python -m mathpad --list

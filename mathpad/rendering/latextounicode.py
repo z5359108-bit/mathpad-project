@@ -20,6 +20,7 @@ _SYMBOLS = {
     r"\geq": "≥",
     r"\pm": "±",
     r"\mp": "∓",
+    r"\cdots": "…",
     r"\cdot": "·",
     r"\times": "×",
     r"\div": "÷",

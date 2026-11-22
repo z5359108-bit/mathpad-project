@@ -82,56 +82,55 @@ def main(argv: list[str] | None = None) -> int:
 
     failures = 0
     solved = 0
-    questions = iter([" ".join(args.question)])
+    questions = iter(args.question)
 
     while True:
-        try:
-            if interactive:
-                try:
-                    question = input("soru> ").strip()
-                except (EOFError, KeyboardInterrupt):
-                    print()
-                    break
-                if not question:
-                    continue
-                if question.lower() in {"çıkış", "cikis", "exit", "quit", "q"}:
-                    break
-            else:
-                try:
-                    question = next(questions).strip()
-                except StopIteration:
-                    break
-                if not question:
-                    break
-
+        if interactive:
             try:
-                if args.solver:
-                    solution = engine.solvers[0].solve(question)
-                    engine.history.append(solution)
-                else:
-                    solution = engine.ask(question)
-                notebook.add(solution)
-                solved += 1
-                if args.defter:
-                    from .rendering.defter import defter_metni
+                question = input("soru> ").strip()
+            except (EOFError, KeyboardInterrupt):
+                print()
+                break
+            if not question:
+                continue
+            if question.lower() in {"çıkış", "cikis", "exit", "quit", "q"}:
+                break
+        else:
+            try:
+                question = next(questions).strip()
+            except StopIteration:
+                break
+            if not question:
+                break
 
-                    print(defter_metni(solution))
-                elif args.pretty:
-                    if interactive:
-                        _print_solution(solution)
-                    else:
-                        print(f"[{solution.solver}] {solution.title}: {solution.result_text}")
+        try:
+            if args.solver:
+                solution = engine.solvers[0].solve(question)
+                engine.history.append(solution)
+            else:
+                solution = engine.ask(question)
+            notebook.add(solution)
+            solved += 1
+            if args.defter:
+                from .rendering.defter import defter_metni
+
+                print(defter_metni(solution))
+            elif args.pretty:
+                if interactive:
+                    _print_solution(solution)
                 else:
-                    _print_latex(solution)
-                if args.png:
-                    from .rendering.png import save_solution_png
-                    print(f"resim: {save_solution_png(solution, args.png, solved)}")
-            except (NoSolverFound, SolverError, ValueError) as exc:
-                failures += 1
-                print(f"hata: {exc}", file=sys.stderr)
-        except Exception:
+                    print(f"[{solution.solver}] {solution.title}: {solution.result_text}")
+            else:
+                _print_latex(solution)
+            if args.png:
+                from .rendering.png import save_solution_png
+                print(f"resim: {save_solution_png(solution, args.png, solved)}")
+        except (NoSolverFound, SolverError, ValueError) as exc:
             failures += 1
-            break
+            print(f"hata: {exc}", file=sys.stderr)
+        except Exception as exc:  # noqa: BLE001
+            failures += 1
+            print(f"hata: {exc}", file=sys.stderr)
 
     if args.notebook:
         print(f"Defter: {notebook.save_markdown(args.notebook)}")

@@ -18,7 +18,7 @@ _KW_STRONG = ("matris", "matrix", "determinant", "det", "özdeğer", "ozdeger", 
 _KW_WEAK = ("lineer", "linear", "vektor", "vektör", "vector", "kare", "carp", "carpim", "system")
 _OP_PATTERNS = {
     "determinant": re.compile(r"determinant|det\b|sarrus", re.IGNORECASE),
-    "inverse": re.compile(r"inverse|tersini|ters matris|tersini al", re.IGNORECASE),
+    "inverse": re.compile(r"inverse|tersi(ni)?\b|\b ters \b|\bter[sş]\b", re.IGNORECASE),
     "eigen": re.compile(r"ozdeger|ozvektor|eigen|karakteristik", re.IGNORECASE),
     "rank": re.compile(r"\brank\b|kerte", re.IGNORECASE),
     "trace": re.compile(r"\btrace\b|\biz\b", re.IGNORECASE),
@@ -76,6 +76,10 @@ class LinearAlgebraSolver(Solver):
         matrix1, matrix2 = matrices[0], matrices[-1]
         match operation:
             case "determinant":
+                if matrix1.rows != matrix1.cols:
+                    raise ValueError(
+                        f"Determinant yalnızca kare matrislerde tanımlıdır; "
+                        f"verilen matris {matrix1.rows}x{matrix1.cols}.")
                 det = matrix1.det()
                 if matrix1.rows == 2 and matrix1.cols == 2:
                     a, b = matrix1.row(0)

@@ -11,7 +11,7 @@ from ..utils import extract_numbers, fold_turkmen
 from .base import Solution, Solver, Step
 
 _KW_STRONG = ("ortalama", "mean", "average", "medyan", "median", "mod ", "tepe", "modu",
-              "standart sapma", "std", "sapma", "varyans", "variance", "toplam", "sum",
+              "standart sapma", "std", "sapma", "varyans", "variance", "varians", "toplam", "sum",
               "adet", "count", "eleman", "min", "maksimum", "maximum", "en kucuk", "en buyuk",
               "jemi", "orta", "in ulu", "in kici")
 _KW_WEAK = ("liste", "list", "veri", "data", "sayi", "deger")
@@ -34,7 +34,7 @@ class StatisticsSolver(Solver):
     def can_handle(self, question: str) -> float:
         q = fold_turkmen(question).lower()
         if re.search(
-            r"funksi\w*|fonksi\w*|aral[iı][ğg]|aralik|interval|noktas|turev|türev|integral|ekstremum|te[gğ]et|f\s*\(", q
+            r"funksi\w*|fonksi\w*|aral[iı][ğg]|aralik|interval|noktas|turev|t\u00fcrev|integral|ekstremum|te[gğ]et|f\s*\(", q
         ):
             return 0.0
         if re.search(r"\^\s*\d", question):
@@ -42,6 +42,10 @@ class StatisticsSolver(Solver):
         if re.search(r"\^\s*[a-w]", question):
             return 0.0
         if re.search(r"\b[a-z]\s*=\s*-?\d+\s*(?:to|dan|den)|\bto\s*(?:oo|sonsuz)|\boo\b|yaklasim|seri|serisi|yigilim", q):
+            return 0.0
+        if re.search(r"(?:sum|toplam)[^\[]{0,60}\b(?:from|[a-z]\s*=)|\bfrom\s+\d+\s+to\b|\bn\s*=\s*\d+\s*(?:to|dan|den)|\b\d+\s*(?:dan|den).{0,20}?\b(?:ya|ye|a|e)\b", q):
+            return 0.0
+        if re.search(r"det(erminant)?\b|\[\s*\[|matris|matrix|ozdeger|özdeğer|eigen", q):
             return 0.0
         if re.search(r"[a-zA-Z_]{3,}\s*\(", question) and not re.search(
             r"sqrt|sin|cos|tan|log|ln|exp|abs|arcsin|arccos|min\(|max\(", question
@@ -58,14 +62,35 @@ class StatisticsSolver(Solver):
             Step("Veri seti", content=data, detail=f"n = {len(data)}"),
         ]
         if re.search(r"standart sapma|std|sapma", q):
-            result = stats.stdev(data) if len(data) > 1 else 0.0
             mean = stats.mean(data)
-            steps.append(Step("Ortalama (önce gerekiyor)", content=mean))
-            steps.append(Step("Formül", latex="s = \\sqrt{\\frac{\\sum (x_i - \\bar{x})^2}{n - 1}}"))
+            variance = sum((x - mean) ** 2 for x in data) / len(data)
+            result = variance ** 0.5
+            sample = variance ** 0.5 * (len(data) / (len(data) - 1)) ** 0.5 if len(data) > 1 else result
+            steps.append(Step("Ortalama", content=mean))
+            steps.append(Step(
+                "Formül (popülasyon, n)",
+                latex=r"\sigma = \sqrt{\frac{\sum (x_i - \bar{x})^2}{n}}",
+            ))
+            steps.append(Step(
+                "Not (örneklem)",
+                latex=f"s = {self._fmt(sample)}",
+                detail="n-1 ile bölen örneklem standart sapması; okul çıktısı popülasyon değeridir",
+            ))
             title = f"Standart sapma = {self._fmt(result)}"
-        elif re.search(r"varyans|variance", q):
-            result = stats.variance(data) if len(data) > 1 else 0.0
-            steps.append(Step("Formül", latex="s^2 = \\frac{\\sum (x_i - \\bar{x})^2}{n - 1}"))
+        elif re.search(r"varians|varyans|variance", q):
+            mean = stats.mean(data)
+            result = sum((x - mean) ** 2 for x in data) / len(data)
+            sample = stats.variance(data) if len(data) > 1 else result
+            steps.append(Step("Ortalama", content=mean))
+            steps.append(Step(
+                "Formül (popülasyon, n)",
+                latex=r"\sigma^2 = \frac{\sum (x_i - \bar{x})^2}{n}",
+            ))
+            steps.append(Step(
+                "Not (örneklem varyansı)",
+                latex=f"s^2 = \\frac{{\\sum (x_i - \\bar{{x}})^2}}{{n - 1}} = {self._fmt(sample)}",
+                detail="n-1 ile bölen örneklem varyansı; okul çıktısı popülasyon değeridir",
+            ))
             title = f"Varyans = {self._fmt(result)}"
         elif re.search(r"medyan|median", q):
             result = stats.median(data)
@@ -108,9 +133,7 @@ class StatisticsSolver(Solver):
         return str(value)
 
     def _solution(self, question: str, result, steps: list[Step], title: str) -> Solution:
-        if isinstance(result, list):
-            rendered = self._fmt(result)
-        elif isinstance(result, (int, float)):
+        if isinstance(result, (list, int, float)):
             rendered = self._fmt(result)
         else:
             rendered = str(result)
@@ -119,7 +142,7 @@ class StatisticsSolver(Solver):
             solver=self.name,
             title=title,
             result=result,
-            result_tex=rendered,
+            result_tex=to_latex(rendered),
             result_text=rendered,
             steps=steps,
         )

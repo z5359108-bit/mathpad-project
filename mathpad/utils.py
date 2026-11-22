@@ -136,6 +136,7 @@ def try_sympify(text: str, locals_: dict | None = None) -> sp.Basic | None:
         return sp.log(value, base)
 
     local = {"sqrt": sp.sqrt, "pi": sp.pi, "oo": sp.oo, "E": sp.E, "e": sp.E, "abs": sp.Abs,
+             "factorial": sp.factorial, "binomial": sp.binomial,
              "sin": sp.sin, "cos": sp.cos, "tan": sp.tan, "log": _log10, "log10": _log10,
              "exp": sp.exp, "ln": sp.log, "i": sp.I, "j": sp.I,
              "asin": sp.asin, "acos": sp.acos, "atan": sp.atan, "acot": sp.acot,

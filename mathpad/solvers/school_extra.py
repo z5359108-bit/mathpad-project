@@ -102,7 +102,7 @@ class SchoolExtraSolver(Solver):
         if re.search(r"artan|azalan|monoton|increasing|decreasing", q):
             if re.search(r"kumesi|aralik|interval|oldugu", q) and self._monotonic_data(question):
                 return 0.92
-        if re.search(r"donum\s*nokta|bukulma\s*nokta|inflection", q):
+        if re.search(r"donum\s*nokta|tepe\s*nokt|tepesi\b|parabol\w*\s+tepe|bukulma\s*nokta|inflection", q):
             if self._inflection_data(question):
                 return 0.92
         if re.search(r"\bbol\b|b[oö]l", q) and not re.search(r"kalan", q):
@@ -137,7 +137,7 @@ class SchoolExtraSolver(Solver):
             data = self._monotonic_data(question)
             if data:
                 return self._solve_monotonic(question, data)
-        if re.search(r"donum\s*nokta|bukulma\s*nokta|inflection", q):
+        if re.search(r"donum\s*nokta|tepe\s*nokt|tepesi\b|parabol\w*\s+tepe|bukulma\s*nokta|inflection", q):
             data = self._inflection_data(question)
             if data:
                 return self._solve_inflection(question, data)
@@ -444,6 +444,7 @@ class SchoolExtraSolver(Solver):
         math_text = _mathified(question)
         if not math_text:
             return None
+        math_text = re.sub(r"^[a-z]\s*=\s*", "", math_text)
         expr = try_sympify(math_text)
         if expr is None or len(expr.free_symbols) != 1:
             return None
@@ -453,10 +454,43 @@ class SchoolExtraSolver(Solver):
         f2 = sp.diff(expr, var, 2)
         roots = sorted([r for r in sp.solve(f2, var) if r.is_number and sp.im(r) == 0],
                        key=lambda r: float(sp.N(r)))
-        return {"expr": expr, "var": var, "f2": f2, "roots": roots}
+        vertex = None
+        try:
+            poly = sp.Poly(expr, var)
+        except sp.PolynomialError:
+            poly = None
+        if poly is not None and poly.degree() == 2:
+            a, b, c = poly.all_coeffs()
+            vx = -b / (2 * a)
+            vertex = (sp.simplify(vx), sp.simplify(expr.subs(var, vx)), a)
+        return {"expr": expr, "var": var, "f2": f2, "roots": roots, "vertex": vertex}
 
     def _solve_inflection(self, question: str, data) -> Solution:
         expr, var, f2, roots = data["expr"], data["var"], data["f2"], data["roots"]
+        vertex = data.get("vertex")
+        if vertex is not None:
+            vx, vy, a = vertex
+            kind = "minimum" if a > 0 else "maksimum"
+            steps = [
+                Step("Türev", latex=f"f'(x) = {to_latex(sp.diff(expr, var))}"),
+                Step(
+                    "Türevi sıfırla",
+                    latex=rf"{to_latex(sp.diff(expr, var))} = 0 \Rightarrow {to_latex(var)} = {to_latex(vx)}",
+                ),
+                Step(
+                    "İkinci türev testi",
+                    latex=f"f''(x) = {to_latex(f2)} {'>' if a > 0 else '<'} 0 \\Rightarrow {kind}",
+                ),
+                Step(
+                    "Tepe (dönüm) noktası",
+                    latex=rf"\left({to_latex(vx)},\ {to_latex(vy)}\right)",
+                    detail=f"parabolun {kind} noktasi",
+                ),
+            ]
+            return self._solution(
+                question, (vx, vy), steps,
+                f"Tepe (dönüm) noktası",
+                data={"kind": "vertex", "var": var.name, "x": vx, "y": vy})
         points = []
         for r in roots:
             eps = sp.Rational(1, 10)

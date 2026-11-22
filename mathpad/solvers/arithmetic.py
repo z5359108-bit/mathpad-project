@@ -61,6 +61,8 @@ class ArithmeticSolver(Solver):
         value = try_sympify(cleaned)
         if value is None:
             return 0.0
+        if re.fullmatch(r"[+-]?\d+(?:\.\d+)?", cleaned):
+            return 0.85
         if re.search(r"\d|[a-zA-Z]", cleaned) and (re.search(r"[+\-*/^!()]", cleaned) or _FACTORIAL.search(cleaned)):
             return 0.8
         return 0.0
@@ -86,13 +88,25 @@ class ArithmeticSolver(Solver):
                 title=f"Yüzde hesabı: {self._fmt(base)} sayısının %{self._fmt(rate)}'i",
             )
 
-        factorial = _FACTORIAL.search(question)
-        if factorial:
-            n = int(factorial.group(1))
-            value = sp.factorial(n)
-            steps.append(Step("Faktöriyel tanımı", latex=f"{n}! = 1 \\cdot 2 \\cdots {n}"))
-            steps.append(Step("Hesap", content=value))
-            return self._solution(question, value, steps, title=f"Faktöriyel: {n}!")
+        factorials = _FACTORIAL.findall(question)
+        if factorials and not parse_percent(question):
+            text = _FACTORIAL.sub(lambda m: f" factorial({m.group(1)}) ", question)
+            text = re.sub(
+                r"\b(?:what|is|the|calculate|hesapla|kac|kaç|kactir|nedir|eşittir|result|bul|compute)\b",
+                " ", text, flags=re.IGNORECASE,
+            )
+            parsed = try_sympify(text.strip())
+            if parsed is not None:
+                steps.append(Step(
+                    "Faktöriyel tanımı",
+                    latex=", \\quad ".join(f"{n}! = 1 \\cdot 2 \\cdots {n}" for n in factorials)))
+                value = sp.simplify(parsed)
+                steps.append(Step("Hesap", content=value))
+                if len(factorials) > 1:
+                    title = "Faktöriyel işlemi: " + " / ".join(f"{n}!" for n in factorials)
+                else:
+                    title = f"Faktöriyel: {factorials[0]}!"
+                return self._solution(question, value, steps, title=title)
 
         text = re.sub(
             r"\b(?:what|is|calculate|hesapla|kac|kaç|nedir|eşittir|result|bul|compute)\b",
@@ -103,6 +117,8 @@ class ArithmeticSolver(Solver):
             raise ValueError("Sayısal ifade ayrıştırılamadı.")
         steps.append(Step("Verilen işlem", content=parsed))
         value = sp.simplify(parsed)
+        if value.has(sp.zoo) or value == sp.nan:
+            raise ValueError("İşlem tanımsız (sıfıra bölme içeriyor).")
         steps.append(Step("Sonuç", content=value))
         return self._solution(question, value, steps, title="Aritmetik işlem")
 

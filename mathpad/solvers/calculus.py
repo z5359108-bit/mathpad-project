@@ -23,8 +23,9 @@ _BOUND = r"(-?(?:[\w.\^*/π−]+|\s*\([^()]*\)|\s*/\s*[\w.]+)+)"
 _DEF_TR = re.compile(
     rf"{_BOUND}[\s'-]*(?:dan|den|tan|ten)\s+{_BOUND}[\s'-]*(?:ya|ye|a|e)\b"
 )
+_DEF_PAREN = re.compile(rf"\(\s*{_BOUND}\s*to\s*{_BOUND}\s*\)")
 _DEF_EN = re.compile(rf"\bfrom\s*{_BOUND}\s*(?:to|up\s*to)\s*{_BOUND}")
-_DEF_SYM = re.compile(r"∫\s*_?\s*\{?\s*([^{}\s,]+)\s*\}?\s*\^\s*\{?\s*([^{}\s,]+)\s*\}?")
+_DEF_SYM = re.compile(r"∫\s*_\s*\{?\s*([^{}\s,]+)\s*\}?\s*\^\s*\{?\s*([^{}\s,]+)\s*\}?")
 _DEF_ARROW = re.compile(r"∫\s*\(\s*([^→()\s]+)\s*→\s*([^)\s]+)\s*\)")
 _LIMIT = re.compile(r"(\w+)\s*(?:->|\u2192|yaklas?i[rğ]?[en]*k?e?n?|yaklasi[rğ]?[en]*|approaches|approaching|goes\s*to|tends\s+to)\s*(-?[\w.∞]+[+-]?)")
 _PIPES_TO_ABS = re.compile(r"\|([^|]+)\|")
@@ -33,7 +34,7 @@ _NOISE = frozenset({
     "integralyny", "integralyn", "integralynyn",
     "al", "alınız", "hesapla", "bul", "nedir", "limit", "limiti", "limitini",
     "sınır", "sınırı", "seri", "serisinin", "açılım", "açılımı", "açılımını", "taylor",
-    "maclaurin", "expansion", "series", "dx", "d/dx",
+    "maclaurin", "expansion", "series", "dx", "d/dx", "at",
     "fonksiyonunun", "fonksiyonun", "iken", "around", "etrafında", "sıfırda",
     "order", "derece", "terim", "terimli", "terimi", "terms", "derecesi", "mertebeden",
     "birinci", "ikinci", "üçüncü", "dördüncü", "beşinci", "first", "second", "third", "fourth", "fifth",
@@ -74,7 +75,7 @@ def _bounds(question: str) -> tuple[sp.Basic, sp.Basic, str] | None:
             return sp.Rational(raw)
         return try_sympify(raw)
 
-    for pattern in (_DEF_SYM, _DEF_EN, _DEF_TR, _DEF_ARROW):
+    for pattern in (_DEF_SYM, _DEF_PAREN, _DEF_EN, _DEF_TR, _DEF_ARROW):
         match = pattern.search(question)
         if match:
             lower = sp.Rational(match.group(1)) if is_number(match.group(1)) else try_sympify(match.group(1))
@@ -114,7 +115,11 @@ def _taylor_params(question: str, default_order: int = 6) -> tuple[sp.Basic, int
     removed = ""
     point = sp.Integer(0)
     order = default_order
-    match = re.search(r"around\s*x?\s*=\s*(-?\d+(?:\.\d+)?)", question.lower())
+    match = re.search(r"(?:around|at|civarinda|civar\u0131nda|civar\u0131nda\w*|etraf\u0131nda)\s*x?\s*=?\s*(-?\d+(?:\.\d+)?)", question.lower())
+    if match:
+        point = sp.Rational(match.group(1))
+        removed += match.group(0) + " "
+    match = re.search(r"\bat\s+(-?\d+(?:\.\d+)?)", question.lower())
     if match:
         point = sp.Rational(match.group(1))
         removed += match.group(0) + " "
@@ -149,6 +154,10 @@ class CalculusSolver(Solver):
             return 0.92
         if re.search(r"\bsum\s+[a-z]\s*=|\bsumm|\bsum\s+[a-z]\s+[-\d]|\u03a3\s*_", q):
             return 0.85
+        if re.search(r"\bsum\s+[a-z]\s+from\s+[^=]*?\bto\b", q):
+            return 0.9
+        if re.search(r"\bint\s+\S+\s*(?:d\s*[a-z])\b", q):
+            return 0.85
         return self._score(q, strong=_KW_STRONG, weak=_KW_WEAK)
 
     def solve(self, question: str) -> Solution:
@@ -160,9 +169,18 @@ class CalculusSolver(Solver):
                 + question[prime_postfix.end():])
         if re.search(r"[fgy]\s*['′]\s*\(\s*[a-z]\s*\)", q) and re.search(r"[fgy]\s*\(\s*[a-z]\s*\)\s*=", q):
             return self._derivative(re.sub(r"[fgy]\s*['′]\s*\([^)]*\)", " ", question))
-        normalized = re.sub(
-            r"\b(summation|sum)\s+([a-zA-Z])\s*=?\s*([\-\w.]+)\s+(?:to\s+)?([\-\w.]+)\s+(?:of\s+)?(.+)",
-            r"sum \2=\3 to \4 of \5", question, flags=re.IGNORECASE)
+        sum_from = re.search(
+            r"\bsum\s+([a-zA-Z])\s+from\s+([\-\w.]+)\s+to\s+([\-\w.]+)\s*(?:of\s+|for\s+)?(.*)$",
+            question, re.IGNORECASE)
+        if sum_from:
+            expr_part = sum_from.group(4).strip() or sum_from.group(1)
+            normalized = (question[:sum_from.start()]
+                          + f"sum {sum_from.group(1)}={sum_from.group(2)} to {sum_from.group(3)} of {expr_part}"
+                          + question[sum_from.end():])
+        else:
+            normalized = re.sub(
+                r"\b(summation|sum)\s+([a-zA-Z])\s*=?\s*([\-\w.]+)\s+(?:to\s+)?([\-\w.]+)\s+(?:of\s+)?(.+)",
+                r"sum \2=\3 to \4 of \5", question, flags=re.IGNORECASE)
         series_swapped = re.search(
             r"\bsum\s+(.+)\s+([a-zA-Z])\s*=\s*([\-\w./]+)\s+to\s+([\-\w./]+)\s*$",
             normalized, re.IGNORECASE)
@@ -185,7 +203,9 @@ class CalculusSolver(Solver):
                 differential=bool(re.search(
                     r"differensial|diferensial|diferensiyal|diferansiyel", q)),
             )
-        if re.search(r"integral|∫", q):
+        if re.search(r"\bint\s+\S+\s*(?:d\s*[a-z])\b|integral|∫", q):
+            if re.search(r"\bint\s+\S+\s*(?:d\s*[a-z])\b", q):
+                question = re.sub(r"\bint\s+", "integral ", question)
             return self._integral(question)
         if re.search(r"limit|lim\b|sınır\b|sinir\b|yaklaş|yaklas|\bçak\b|\bcak\b|\bçek\b|\bcek\b", q):
             return self._limit(question)
