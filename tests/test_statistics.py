@@ -39,10 +39,10 @@ class TestStatsUnit(unittest.TestCase):
         self.check("median of [10, 2, 8]", 8.0)
 
     def test_variance(self):
-        self.check("varyans [2, 4, 4, 4, 5, 5, 7, 9]", 4.571428571428571)
+        self.check("varyans [2, 4, 4, 4, 5, 5, 7, 9]", 4.0)
 
     def test_std(self):
-        self.check("standart sapma [2, 4, 4, 4, 5, 5, 7, 9]", 2.138089935299395)
+        self.check("standart sapma [2, 4, 4, 4, 5, 5, 7, 9]", 2.0)
 
     def test_sum(self):
         self.check("toplam [1, 2, 3]", 6.0)

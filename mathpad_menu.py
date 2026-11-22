@@ -191,7 +191,7 @@ class App:
         for i, solution in enumerate(self.notebook.solutions, 1):
             path = os.path.join(klasor, f"defter_{i:03d}.png")
             try:
-                uret(solution, path, dpi=self.ayar.dpi)
+                solution_to_png(solution, path, dpi=self.ayar.dpi)
                 print(f"📷 {path}")
             except Exception as exc:
                 print(f"(üretilemedi {path}: {exc})")

@@ -28,8 +28,18 @@ class MathPad:
         self.solvers.append(solver)
 
     def route(self, question: str) -> list[tuple[float, Solver]]:
-        """Çözücüleri güven skoruna göre sırala (en iyi başta)."""
-        scored = [(solver.can_handle(question), solver) for solver in self.solvers]
+        """Çözücüleri güven skoruna göre sırala (en iyi başta).
+
+        Bir çözücünün can_handle'ı beklemedik şekilde hiçbir sonucu bozmasın
+        (ör. Boolean cinsinden istisna): hata verilmiş çözücünün skoru 0 kabul edilir.
+        """
+        scored: list[tuple[float, Solver]] = []
+        for solver in self.solvers:
+            try:
+                score = float(solver.can_handle(question))
+            except Exception:  # noqa: BLE001
+                score = 0.0
+            scored.append((score, solver))
         return sorted(scored, key=lambda pair: pair[0], reverse=True)
 
     def ask(self, question: str) -> Solution:

@@ -23,7 +23,7 @@ _PIPES_RE = re.compile(r"\|([^|]+)\|")
 _LOG_EQ_RE = re.compile(r"log_?\{?(\d+)\}?\s*\(([^()]+)\)\s*=\s*(.+)")
 _LOG_TERM_RE = re.compile(r"(?P<sign>[+\-]?)\s*log_?\{?(\d+)\}?\s*\(([^()]+)\)")
 _LOG_EVAL_RE = re.compile(r"([+\-]?)\s*log_?\{?(\d+)\}?\s*\(?\s*(-?\d+(?:\.\d+)?)\s*\)?")
-_ASSIGN_RE = re.compile(r"([abqds])\s*_?\s*(\d*)\s*=\s*(-?\d+(?:\.\d+)?)")
+_ASSIGN_RE = re.compile(r"([abqdsn])\s*_?\s*(\d*)\s*=\s*(-?\d+(?:\.\d+)?)")
 _WANTED_RE = re.compile(r"([sb])\s*_?\s*(\d+)\s*=\s*\?")
 _NTH_TERM_RE = re.compile(r"(\d+)\s*\.?\s*(?:terim|eleman|uyesi|üyesi|had)")
 _TWO_SQUARE_RE = re.compile(r"([a-z])\s*\^\s*2\s*\+\s*([a-z])\s*\^\s*2")
@@ -54,7 +54,10 @@ def _parse_single_equation(question: str):
     if not symbols:
         return None
     var = sorted(symbols, key=lambda s: s.name)[0]
-    return sp.Eq(left, right), var
+    eq = sp.Eq(left, right, evaluate=False)
+    if not isinstance(eq, sp.Eq):
+        return None
+    return eq, var
 
 
 def _L(expr) -> str:
@@ -733,7 +736,12 @@ class AdvancedAlgebraSolver(Solver):
                 if not (seed_arith or seed_geom):
                     return None
                 bare = True
-                wanted = ("b", 6) if (seed_geom and not seed_arith) else ("a", 20)
+                if values.get("n") is not None:
+                    wanted = ("b" if (seed_geom and not seed_arith) else "a", int(values["n"]))
+                elif seed_geom:
+                    wanted = ("b", 6) if not seed_arith else ("a", 20)
+                else:
+                    wanted = ("a", 20)
             else:
                 wanted = (fallback.group(1).lower(), int(fallback.group(2)))
         if not kind_word and not values:

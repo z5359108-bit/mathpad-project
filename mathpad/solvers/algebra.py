@@ -22,7 +22,8 @@ _EQ_NOISE = r"\b(?:solve|çöz|çözün|coz|denklemini|denklemi|denklem|sistemi|
 _FX_NOISE = r"\b(?:factor\S*|[çc]arpanlar?\S*|factorize|expand|[gğ]enişlet|[gğ]enislet|çyzyklary|" \
             r"simplify|basitleştir\S*|basitleş\S*|sadeleş\S*|sadeleştir\S*|" \
             r"basitlestir\S*|basitlest\S*|sadelest\S*|baslashtir\S*|" \
-            r"ifadesini|ifadeyi|ifade|expression|ay[iı]r\S*|boluji|bolumu)\b"
+            r"ifadesini|ifadeyi|ifade|expression|ay[ı\u0131]r\S*|boluji|bolumu|" \
+            r"polinom\w*|bol(?:me|un)\w*)\b"
 _SUFFIXES = ("'nin", "'nın", "'nun", "'ün", "'ın", "'in", "'yi", "'yı", "'si", "'i", "'ı")
 
 
@@ -156,7 +157,7 @@ class AlgebraSolver(Solver):
 
 
     def _is_transform_request(self, question: str) -> bool:
-        return bool(re.search(r"\bfactor|carpan|expand|genislet|simplify|basitlest|sadelest", fold_turkmen(question).lower()))
+        return bool(re.search(r"\bfactor|carpan|expand|genislet|simplify|basitlest|sadelest|\bbol(?:me|un)\b", fold_turkmen(question).lower()))
 
     def _solution(self, question: str, result, steps: list[Step], title: str,
                   data: dict | None = None) -> Solution:
@@ -178,7 +179,27 @@ class AlgebraSolver(Solver):
         expr = try_sympify(cleaned)
         if expr is None:
             raise ValueError("İfade ayrıştırılamadı.")
+        if isinstance(expr, sp.Symbol):
+            raise ValueError(
+                f"'{question}' için bir sayı veya cebirsel ifade gerekli; "
+                "ör: '36 sayısının asal çarpanları', 'factor x^2-9'.")
         steps.append(Step("Verilen ifade", content=expr))
+        if re.search(r"\bbol(?:me|un)\b", q):
+            syms = sorted(expr.free_symbols, key=lambda s: s.name)
+            if not syms:
+                raise ValueError("Bölme en az bir değişkenli bir ifade gerektirir; ör: 'polinom bölme (x^3-1)/(x-1)'.")
+            num, den = expr.as_numer_denom()
+            quotient, remainder = sp.div(sp.expand(num), sp.expand(den), *syms)
+            label = "Polinom bölme"
+            steps.append(Step("Bölüm", content=quotient))
+            steps.append(Step("Kalan", content=sp.Integer(0) if remainder == 0 else remainder))
+            if remainder == 0:
+                return self._solution(question, quotient, steps, label)
+            result = (quotient, remainder)
+            sol = self._solution(question, result, steps, label)
+            sol.result_tex = rf"{to_latex(quotient)}, \quad kalan = {to_latex(remainder)}"
+            sol.result_text = f"bölüm = {to_text(quotient)}, kalan = {to_text(remainder)}"
+            return sol
         if re.search(r"\bfactor|carpan", q):
             result = sp.factor(expr)
             steps.append(Step("Çarpanlara ayırma", content=result))
@@ -273,6 +294,17 @@ class AlgebraSolver(Solver):
         if len(equations) == 1 and results:
             self._append_trig_periodicity(steps, equations[0], symbols[0], results)
         if not results:
+            if len(equations) == 1:
+                residual = sp.simplify(equations[0].lhs - equations[0].rhs)
+                if residual == 0:
+                    steps.append(Step(
+                        "İki taraf aynı",
+                        latex=rf"{to_latex(equations[0].lhs)} \equiv {to_latex(equations[0].rhs)} \Rightarrow \text{{özdeşlik}}",
+                        detail="her x değerinde sağlanır"))
+                    steps.append(Step("Sonuç", latex=r"x \in \mathbb{R}"))
+                    return self._solution(
+                        question, "ℝ (özdeşlik: her gerçek sayı çözümdür)", steps,
+                        "Denklem çözümü (özdeşlik)", data=eq_data)
             steps.append(Step("Sonuç", latex="\\varnothing"))
             return self._solution(
                 question, "∅ (gerçek sayılarda çözüm yok)", steps,

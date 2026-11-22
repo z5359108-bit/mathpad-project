@@ -8,6 +8,8 @@ from .advanced_analysis import AdvancedAnalysisSolver
 from .linear_algebra import LinearAlgebraSolver
 from .number_theory import NumberTheorySolver
 from .statistics import StatisticsSolver
+from .geometry import GeometrySolver
+from .word_problems import WordProblemSolver
 
 DEFAULT_SOLVERS = (
     AdvancedAlgebraSolver(),
@@ -19,6 +21,8 @@ DEFAULT_SOLVERS = (
     LinearAlgebraSolver(),
     NumberTheorySolver(),
     StatisticsSolver(),
+    GeometrySolver(),
+    WordProblemSolver(),
 )
 
 __all__ = [
@@ -36,4 +40,6 @@ __all__ = [
     "LinearAlgebraSolver",
     "NumberTheorySolver",
     "StatisticsSolver",
+    "GeometrySolver",
+    "WordProblemSolver",
 ]
