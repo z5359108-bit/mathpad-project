@@ -537,7 +537,7 @@ def _complex_text(z) -> str:
         im_text = _num(abs(im_p)) + "i"
     re_text = _num(re_p) if re_p != 0 else ""
     if not re_text:
-        return im_text
+        return (MINUS if im_p < 0 else "") + im_text
     sign = " + " if im_p > 0 else " " + MINUS + " "
     return re_text + sign + im_text
 
@@ -1033,6 +1033,47 @@ def _nice1(diff, var):
     return "(" + num_text + ")/" + den_text if isinstance(num, sp.Add) else num_text + "/" + den_text
 
 
+def _chain_term_order(expr: sp.Add) -> list:
+    """nb/_add_text yazim sirasiyla uyumlu terim sirasi: sabitler sonda."""
+    def _frac_first(t):
+        _, rest = t.as_coeff_Mul()
+        if isinstance(rest, sp.Pow) and isinstance(rest.exp, sp.Rational) and rest.exp < 0:
+            return 0
+        if isinstance(rest, sp.Mul) and any(
+            isinstance(f, sp.Pow) and isinstance(f.exp, sp.Rational) and f.exp < 0
+            for f in rest.as_ordered_factors()
+        ):
+            return 0
+        return 1
+
+    def _const_last(t):
+        if t.is_number:
+            return 1 if (not t.free_symbols and not _special_atoms(t)) else 0
+        return 0
+
+    return sorted(expr.as_ordered_terms(), key=lambda t: (_frac_first(t), _const_last(t)))
+
+
+def _differential_chain(expr, var, final_text) -> str | None:
+    """(10x + 5)\u2032dx = (10 + 0)dx = 10dx biciminde terim-terim zincir."""
+    expr, var = sp.sympify(expr), sp.sympify(var)
+    if not isinstance(expr, sp.Add):
+        return None
+    if not var in expr.free_symbols:
+        return None
+    terms = _chain_term_order(expr)
+    inner = _signed_join([nb(sp.diff(term, var)) for term in terms])
+    if inner == final_text:
+        return None
+    if final_text.startswith("("):
+        end = final_text + "dx"
+    elif " " in final_text or MINUS in final_text:
+        end = "(" + final_text + ")dx"
+    else:
+        end = final_text + "dx"
+    return f"({nb(expr)}){_PRIME}dx = ({inner})dx = {end}"
+
+
 def _kisa_differential(solution) -> list[str] | None:
     data = solution.data or {}
     if data.get("kind") != "derivative":
@@ -1052,7 +1093,12 @@ def _kisa_differential(solution) -> list[str] | None:
         df_line = f"df = {text}dx"
     else:
         df_line = f"df = ({text})dx"
-    return [f"f{_PRIME}({data['var']}) = {text}", df_line]
+    lines = [f"f{_PRIME}({data['var']}) = {text}"]
+    chain = _differential_chain(expr, data["var"], text)
+    if chain:
+        lines.append(chain)
+    lines.append(df_line)
+    return lines
 
 
 def _kisa_second_deriv(solution) -> list[str] | None:

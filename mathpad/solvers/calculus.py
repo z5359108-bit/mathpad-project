@@ -158,10 +158,28 @@ class CalculusSolver(Solver):
             return 0.9
         if re.search(r"\bint\s+\S+\s*(?:d\s*[a-z])\b", q):
             return 0.85
+        if re.search(r"\bdf\s*[:=]\s*", q):
+            return 0.9
+        if re.search(r"\bd\s*\(\s*[^()]+?\s*\)", q):
+            return 0.9
+        if re.search(r"\bdf\b", q) and re.search(r"[fbg]\s*\(\s*[a-z]\s*\)\s*=", q):
+            return 0.9
         return self._score(q, strong=_KW_STRONG, weak=_KW_WEAK)
 
     def solve(self, question: str) -> Solution:
         q = fold_turkmen(question).lower()
+        if re.search(r"\bdf\s*:\s*", q):
+            question = re.sub(r"\bdf\s*:\s*", "diferensial ", question)
+            return self._derivative(question, differential=True)
+        if re.search(r"\bdf\b", q) and re.search(r"[fbg]\s*\(\s*[a-z]\s*\)\s*=", q):
+            question = re.sub(r"\s*,?\s*\bdf\b\s*", " ", question)
+            return self._derivative("diferensial " + question, differential=True)
+        df_eq = re.search(r"\bdf\s*=\s*\(?([^()]+?)\)?\s*dx\b", question, re.IGNORECASE)
+        if df_eq:
+            return self._antiderivative_from_df(question, df_eq.group(1))
+        dform = re.search(r"\bd\s*\(([^()]*)\)(?!\s*=)", question)
+        if dform and dform.group(1).strip():
+            return self._derivative(f"diferensial f(x) = {dform.group(1)}", differential=True)
         prime_postfix = re.search(r"\(\s*([^()]+?)\s*\)\s*['′]", q)
         if prime_postfix and not re.search(r"integral|limit|\blimb|\bsin|\bcos", q):
             return self._derivative(
@@ -283,6 +301,21 @@ class CalculusSolver(Solver):
             "kind": "derivative", "expr": expr, "var": var,
             "order": order, "result": result,
         })
+
+    def _antiderivative_from_df(self, question: str, inner: str) -> Solution:
+        expr = try_sympify(inner.strip())
+        if expr is None:
+            raise ValueError(f"Diferansiyel form ayrıştırılamadı: 'df = ({inner})dx'")
+        var = pick_symbol(expr)
+        F = sp.integrate(expr, var)
+        result = F + sp.Symbol("C")
+        steps = [
+            Step("Denklem", latex=rf"df = ({to_latex(expr)})\,dx",
+                 detail="df = f\u2032(x)\u00b7dx demektir"),
+            Step("İki tarafın integralini al", latex=rf"f = \int {to_latex(expr)}\,d{var.name}"),
+            Step("İntegrali hesapla", latex=rf"f = {to_latex(F)} + C"),
+        ]
+        return self._solution(question, result, steps, "Diferansiyel formdan fonksiyon (antitürev)")
 
     def _integral(self, question: str) -> Solution:
         question = re.sub(r"\b(?:y|f|g)\s*\(\s*([a-z])\s*\)\s*=\s*", " ", question, flags=re.IGNORECASE)

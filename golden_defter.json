@@ -204,6 +204,7 @@
   "soru": "f(x)=3x^3+cos(2x)-3 differensialyny tapyň",
   "defter": [
    "f′(x) = 9x² − 2sin 2x",
+   "(3x³ + cos 2x − 3)′dx = (9x² − 2sin 2x + 0)dx = (9x² − 2sin 2x)dx",
    "df = (9x² − 2sin 2x)dx"
   ]
  },
@@ -218,6 +219,7 @@
   "soru": "f(x)=ln(3x+1)+x^3 diferensialyny tap",
   "defter": [
    "f′(x) = 3/(3x + 1) + 3x²",
+   "(x³ + ln(3x + 1))′dx = (3x² + 3/(3x + 1))dx = (3/(3x + 1) + 3x²)dx",
    "df = (3/(3x + 1) + 3x²)dx"
   ]
  },

@@ -251,6 +251,64 @@ class TestDefterModu(Harness):
             self.assertGreater(os.path.getsize(out), 1000)
 
 
+class TestKarmasikKokIsareti(Harness):
+    def test_defter_sanal_isaret_x2_negatif(self):
+        metin = defter_metni(self.mp.ask("x^2=-4"))
+        self.assertIn("x\u2081 = 2i, x\u2082 = \u22122i", metin)
+
+    def test_defter_sanal_isaret_birim(self):
+        metin = defter_metni(self.mp.ask("x^2+1=0"))
+        self.assertIn("x\u2081 = i, x\u2082 = \u2212i", metin)
+
+    def test_reel_kok_etkilenmedi(self):
+        metin = defter_metni(self.mp.ask("x^2-3x+2=0"))
+        self.assertIn("x\u2081 = 2, x\u2082 = 1", metin)
+
+
+class TestDiferansiyelFormlari(Harness):
+    x = sp.Symbol("x")
+
+    def test_df_antitrev(self):
+        s = self.mp.ask("df=(10x+5)dx")
+        self.assertEqual(s.solver, "calculus")
+        self.assertEqual(sp.simplify(s.result - (5 * self.x**2 + 5 * self.x + sp.Symbol("C"))), 0)
+
+    def test_df_bosluksuz(self):
+        s = self.mp.ask("df = (3x^2)dx")
+        self.assertEqual(s.solver, "calculus")
+        self.assertIn("C", s.result_tex)
+
+    def test_d_formu(self):
+        s = self.mp.ask("d(x^2+5x-10)")
+        self.assertEqual(s.solver, "calculus")
+        self.assertEqual(s.result, sp.Mul(2 * self.x + 5, sp.Symbol("dx")))
+
+    def test_df_iki_nokta_formu(self):
+        s = self.mp.ask("df: f(x)=2x^3-x^2+3x-1")
+        self.assertEqual(s.solver, "calculus")
+        self.assertEqual(s.result, sp.Mul(6 * self.x**2 - 2 * self.x + 3, sp.Symbol("dx")))
+
+    def test_fn_basina_df(self):
+        s = self.mp.ask("f(x)=10, df")
+        self.assertEqual(s.solver, "calculus")
+        self.assertEqual(s.result, 0)
+
+    def test_zincirli_defter(self):
+        metin = defter_metni(self.mp.ask("diferensial: f(x)=10x+5"))
+        lines = [l.strip() for l in metin.splitlines() if l.strip()]
+        self.assertIn("(10x + 5)\u2032dx = (10 + 0)dx = 10dx", lines)
+        self.assertTrue(lines[-1].startswith("df = "), lines[-1])
+
+    def test_defter_df_satiri_sonda_kalir(self):
+        metin = defter_metni(self.mp.ask("df: f(x)=2x^3-x^2+3x-1"))
+        lines = [l.strip() for l in metin.splitlines() if l.strip()]
+        self.assertTrue(lines[-1].startswith("df = ("), lines[-1])
+
+    def test_xy_ikili_kok_etkilenmedi(self):
+        metin = defter_metni(self.mp.ask("x^2+4x+5=0"))
+        self.assertIn("x\u2081 = \u22122 + i, x\u2082 = \u22122 \u2212 i", metin)
+
+
 class TestProgramatikKullanim(Harness):
     def test_ask_many(self):
         sols = self.mp.ask_many("2+2", "7!/5!", "sum n from 1 to 100")
